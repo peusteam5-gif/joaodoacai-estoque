@@ -1816,7 +1816,7 @@ async function fazerLogin() {
     nome:        perfil?.nome    || userVal,
     usuario:     userVal,
     nivel:       perfil?.nivel   || 'operador',
-    permissoes:  perfil?.permissoes || null,
+    permissoes:  typeof perfil?.permissoes === 'string' ? JSON.parse(perfil.permissoes) : (perfil?.permissoes || null),
     senha:       '' // não exposto
   };
 
@@ -1867,16 +1867,16 @@ function aplicarPermissoes() {
 
 function temPermissao(perm) {
   if (!usuarioLogado) return false;
-  // Admin sempre tem tudo
-  if (usuarioLogado.nivel === 'admin' && !usuarioLogado.permissoes) return true;
-  // Se o perfil tem permissões customizadas, usa elas
-  if (usuarioLogado.permissoes && typeof usuarioLogado.permissoes === 'object') {
-    // darEntrada não definida = true por padrão para admin
-    if (perm === 'darEntrada' && usuarioLogado.permissoes[perm] === undefined) {
-      return usuarioLogado.nivel === 'admin';
-    }
-    return usuarioLogado.permissoes[perm] === true;
+  // Permissões customizadas têm prioridade absoluta
+  const perms = usuarioLogado.permissoes;
+  if (perms && typeof perms === 'object' && Object.keys(perms).length > 0) {
+    // Se a permissão está definida no objeto, usa ela
+    if (perms[perm] !== undefined) return perms[perm] === true;
+    // Se não está definida, admin tem tudo, outros não
+    return usuarioLogado.nivel === 'admin';
   }
+  // Sem permissões customizadas: admin tem tudo
+  if (usuarioLogado.nivel === 'admin') return true;
   // Fallback: permissões padrão do nível
   return PERMS_PADRAO[usuarioLogado.nivel]?.[perm] === true;
 }
@@ -3332,7 +3332,7 @@ function renderAll() {
       id:          session.user.id,
       nome:        perfil?.nome    || emailUser,
       usuario:     emailUser,
-      permissoes:  perfil?.permissoes || null,
+      permissoes:  typeof perfil?.permissoes === 'string' ? JSON.parse(perfil.permissoes) : (perfil?.permissoes || null),
       nivel:   perfil?.nivel   || 'operador',
       senha:   ''
     };
