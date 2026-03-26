@@ -2298,15 +2298,52 @@ function onTransfProdChange() {
   const box = document.getElementById('transf-info-box');
   const lbl = document.getElementById('transf-qty-label');
   const inp = document.getElementById('transf-qty');
+  const sel = document.getElementById('transf-para');
+
   if (p) {
     const st = SETORES[p.setor];
-    box.style.display='block';
+
+    // Regras de fluxo:
+    // Depósito → Cozinha ou Buffet
+    // Cozinha  → Buffet apenas
+    // Buffet   → nenhum
+    const destinosPermitidos = {
+      deposito: ['cozinha','buffet'],
+      cozinha:  ['buffet'],
+      buffet:   []
+    };
+    const permitidos = destinosPermitidos[p.setor] || [];
+
+    // Atualizar select de destino
+    sel.innerHTML = permitidos.length === 0
+      ? '<option value="">⛔ Buffet não pode transferir</option>'
+      : permitidos.map(d => `<option value="${d}">${SETORES[d].emoji} ${SETORES[d].nome}</option>`).join('');
+    sel.disabled = permitidos.length === 0;
+
+    box.style.display = 'block';
     box.className = 'info-box info-box-' + p.setor;
-    box.innerHTML = `${st.emoji} <strong>Origem: ${st.nome}</strong> &nbsp;|&nbsp; Estoque disponível: <strong>${fmtQty(p)} ${p.unidade}</strong>`;
+
+    if (permitidos.length === 0) {
+      box.innerHTML = `${st.emoji} <strong>Origem: ${st.nome}</strong> &nbsp;|&nbsp; <span style="color:var(--vermelho)">⛔ O Buffet não pode transferir produtos para outros setores.</span>`;
+    } else {
+      box.innerHTML = `${st.emoji} <strong>Origem: ${st.nome}</strong> &nbsp;|&nbsp; Estoque disponível: <strong>${fmtQty(p)} ${p.unidade}</strong>
+        &nbsp;|&nbsp; <span style="font-size:12px;color:var(--text-light)">Destinos disponíveis: ${permitidos.map(d=>SETORES[d].nome).join(', ')}</span>`;
+    }
+
     lbl.textContent = `Quantidade a Transferir (${p.unidade})`;
     inp.step = p.tipo === 'peso' ? '0.001' : '1';
     inp.placeholder = p.tipo === 'peso' ? '0.000' : '0';
-  } else { box.style.display='none'; }
+    inp.disabled = permitidos.length === 0;
+  } else {
+    box.style.display = 'none';
+    // Restaurar select com todas as opções
+    sel.innerHTML = `
+      <option value="cozinha">👨‍🍳 Cozinha</option>
+      <option value="buffet">🍨 Buffet</option>
+      <option value="deposito">🏭 Depósito</option>`;
+    sel.disabled = false;
+    inp.disabled = false;
+  }
 }
 
 // ---- TOAST NOTIFICATION ----
@@ -2333,6 +2370,20 @@ function salvarTransferencia() {
   if (de === para) { alert('Origem e destino devem ser setores diferentes!'); return; }
   if (prod.transferivel === false) {
     showToast('🚫 Este produto não permite transferência entre setores!', 'error');
+    return;
+  }
+  // Regras de fluxo de transferência
+  const fluxoPermitido = {
+    deposito: ['cozinha','buffet'],
+    cozinha:  ['buffet'],
+    buffet:   []
+  };
+  if (!(fluxoPermitido[de] || []).includes(para)) {
+    const msgs = {
+      buffet: '⛔ O Buffet não pode transferir produtos para outros setores.',
+      cozinha: '⛔ A Cozinha só pode transferir para o Buffet.',
+    };
+    showToast(msgs[de] || '⛔ Transferência não permitida neste sentido!', 'error');
     return;
   }
   if (qty > prod.qty) { alert(`Estoque insuficiente!\nAtual no ${SETORES[de].nome}: ${fmtQty(prod)} ${prod.unidade}`); return; }
@@ -2519,7 +2570,7 @@ function renderSetor(s) {
         <h2>Produtos — ${st.emoji} ${st.nome}</h2>
         <div class="table-header-right">
           <button class="btn btn-outline btn-sm" onclick="openModalMovSetor('${s}')">+ Movimentação</button>
-          <button class="btn btn-transfer btn-sm" onclick="openModalTransfSetor('${s}')">↔️ Transferir</button>
+          ${s !== 'buffet' ? `<button class="btn btn-transfer btn-sm" onclick="openModalTransfSetor('${s}')">↔️ Transferir</button>` : ''}
         </div>
       </div>
       ${lista.length === 0 ? `<div class="empty"><div class="icon">📦</div><p>Nenhum produto neste setor.<br>Cadastre em "+ Produto" selecionando o setor <strong>${st.nome}</strong>.</p></div>` : `
