@@ -3807,13 +3807,17 @@ const _origOpenModalMassa = window._openModal || (id => {});
 
 // Transferência rápida — abre modal já com produto selecionado
 function transferenciaRapida(prodId) {
-  const si = document.getElementById('search-transf');
-  if (si) si.value = '';
-  populateMovSel('transf-produto', prodId);
-  // Disparar onchange para atualizar destinos
-  document.getElementById('transf-produto').value = prodId;
-  onTransfProdChange();
+  // 1. Abrir modal (openModal reseta o select internamente)
   openModal('modal-transfer');
+  // 2. DEPOIS setar o produto — usando setTimeout para garantir que o reset já ocorreu
+  setTimeout(() => {
+    populateMovSel('transf-produto', prodId);
+    const sel = document.getElementById('transf-produto');
+    if (sel) {
+      sel.value = prodId;
+      onTransfProdChange();
+    }
+  }, 50);
 }
 
 // ======== FIM BACKUP ========
