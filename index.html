@@ -554,7 +554,7 @@ async function carregarDados() {
 
 <!-- ====== MODAL GERENCIAR USUÁRIOS ====== -->
 <div class="modal-overlay" id="modal-usuarios">
-  <div class="modal" style="width:560px">
+  <div class="modal" style="width:600px">
     <h2>👥 Gerenciar Usuários</h2>
     <div class="user-list" id="user-list"></div>
     <hr class="divider">
@@ -575,14 +575,46 @@ async function carregarDados() {
         <input type="password" id="nu-pass" placeholder="mínimo 4 caracteres">
       </div>
       <div class="form-group">
-        <label>Nível de Acesso</label>
-        <select id="nu-nivel">
+        <label>Perfil base <span style="font-size:11px;color:var(--text-light)">(preenche permissões automaticamente)</span></label>
+        <select id="nu-nivel" onchange="aplicarPerfilBase()">
           <option value="admin">👑 Administrador</option>
           <option value="gerente">🔑 Gerente</option>
-          <option value="operador">👤 Operador</option>
+          <option value="operador" selected>👤 Operador</option>
         </select>
       </div>
     </div>
+
+    <!-- Permissões customizáveis -->
+    <div style="background:var(--creme);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:12px">🔐 Permissões do usuário</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-cadastrarProduto"> 📦 Cadastrar produtos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-editarProduto"> ✏️ Editar produtos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-excluirProduto"> 🗑️ Excluir produtos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-verRelatorios"> 📊 Ver relatórios
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-verDesperdicio"> 🗑️ Registrar desperdício
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-gerenciarUsuarios"> 👥 Gerenciar usuários
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-fazerTransferencia" checked> ↔️ Transferir estoque
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-fazerMovimentacao" checked> 🔄 Movimentar estoque
+        </label>
+      </div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-usuarios')">Fechar</button>
       <button class="btn btn-primary" onclick="criarUsuario()">Criar Usuário</button>
@@ -1532,12 +1564,35 @@ const NIVEIS = {
   operador: { label:'Operador',      emoji:'👤', cor:'#1E8449', badge:'nivel-operador' }
 };
 
-// Permissões por nível
-const PERMS = {
-  admin:   { excluirProduto:true,  cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:true,  verRelatorios:true,  verDesperdicio:true  },
-  gerente: { excluirProduto:false, cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:false, verRelatorios:true,  verDesperdicio:true  },
-  operador:{ excluirProduto:false, cadastrarProduto:false, editarProduto:false, gerenciarUsuarios:false, verRelatorios:false, verDesperdicio:true  }
+// Permissões padrão por perfil (usadas ao selecionar perfil base)
+const PERMS_PADRAO = {
+  admin:   { excluirProduto:true,  cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:true,  verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true  },
+  gerente: { excluirProduto:false, cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:false, verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true  },
+  operador:{ excluirProduto:false, cadastrarProduto:false, editarProduto:false, gerenciarUsuarios:false, verRelatorios:false, verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true  }
 };
+
+// Compatibilidade: PERMS agora aponta para PERMS_PADRAO
+const PERMS = PERMS_PADRAO;
+
+// Preenche os checkboxes de permissão conforme o perfil selecionado
+function aplicarPerfilBase() {
+  const nivel = document.getElementById('nu-nivel').value;
+  const p = PERMS_PADRAO[nivel] || PERMS_PADRAO.operador;
+  const map = {
+    'perm-cadastrarProduto':  p.cadastrarProduto,
+    'perm-editarProduto':     p.editarProduto,
+    'perm-excluirProduto':    p.excluirProduto,
+    'perm-verRelatorios':     p.verRelatorios,
+    'perm-verDesperdicio':    p.verDesperdicio,
+    'perm-gerenciarUsuarios': p.gerenciarUsuarios,
+    'perm-fazerTransferencia':p.fazerTransferencia,
+    'perm-fazerMovimentacao': p.fazerMovimentacao,
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = !!val;
+  });
+}
 
 function loadUsuarios() { return []; }
 function saveUsuarios() { /* Supabase Auth */ }
@@ -1562,11 +1617,12 @@ async function fazerLogin() {
   // Busca perfil do usuário na tabela perfis
   const { data: perfil } = await sb.from('perfis').select('*').eq('id', data.user.id).single();
   usuarioLogado = {
-    id:      data.user.id,
-    nome:    perfil?.nome    || userVal,
-    usuario: userVal,
-    nivel:   perfil?.nivel   || 'operador',
-    senha:   '' // não exposto
+    id:          data.user.id,
+    nome:        perfil?.nome    || userVal,
+    usuario:     userVal,
+    nivel:       perfil?.nivel   || 'operador',
+    permissoes:  perfil?.permissoes || null,
+    senha:       '' // não exposto
   };
 
   document.getElementById('login-screen').classList.add('hidden');
@@ -1616,7 +1672,12 @@ function aplicarPermissoes() {
 
 function temPermissao(perm) {
   if (!usuarioLogado) return false;
-  return PERMS[usuarioLogado.nivel][perm] === true;
+  // Se o perfil tem permissões customizadas, usa elas
+  if (usuarioLogado.permissoes && typeof usuarioLogado.permissoes === 'object') {
+    return usuarioLogado.permissoes[perm] === true;
+  }
+  // Fallback: permissões padrão do nível
+  return PERMS_PADRAO[usuarioLogado.nivel]?.[perm] === true;
 }
 
 function abrirMenuUsuario() {
@@ -1632,39 +1693,94 @@ document.addEventListener('click', e => {
 
 // ---- GERENCIAR USUÁRIOS ----
 function renderUsuarios() {
-  const lista = loadUsuarios();
   const el = document.getElementById('user-list');
   if (!el) return;
-  el.innerHTML = lista.map(u => {
-    const nv = NIVEIS[u.nivel];
+  el.innerHTML = '<div style="color:var(--text-light);font-size:13px;padding:8px">Carregando…</div>';
+  sb.from('perfis').select('*').order('criado_em',{ascending:true}).then(({data}) => {
+    const lista = (data||[]).map(p => ({...p, usuario: p.usuario||p.id}));
+    el.innerHTML = lista.map(u => {
+    const nv = NIVEIS[u.nivel] || NIVEIS.operador;
     const isSelf = usuarioLogado && u.id === usuarioLogado.id;
+    const perms = u.permissoes || PERMS_PADRAO[u.nivel] || {};
+    const permLabels = [
+      perms.cadastrarProduto  ? '📦' : '',
+      perms.editarProduto     ? '✏️' : '',
+      perms.excluirProduto    ? '🗑️' : '',
+      perms.verRelatorios     ? '📊' : '',
+      perms.verDesperdicio    ? '♻️' : '',
+      perms.gerenciarUsuarios ? '👥' : '',
+      perms.fazerTransferencia? '↔️' : '',
+      perms.fazerMovimentacao ? '🔄' : '',
+    ].filter(Boolean).join(' ');
     return `<div class="user-item">
       <div class="user-avatar" style="background:${nv.cor};width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;flex-shrink:0">${u.nome.charAt(0).toUpperCase()}</div>
-      <div class="user-item-info">
+      <div class="user-item-info" style="flex:1">
         <div class="user-item-name">${u.nome} ${isSelf?'<span style="font-size:10px;color:var(--text-light)">(você)</span>':''}</div>
         <div class="user-item-meta">@${u.usuario} &nbsp;·&nbsp; <span class="badge ${nv.badge}">${nv.emoji} ${nv.label}</span></div>
+        ${u.permissoes ? `<div style="font-size:12px;color:var(--text-light);margin-top:3px">Permissões: ${permLabels||'nenhuma'}</div>` : ''}
       </div>
-      ${!isSelf ? `<button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id})">🗑️</button>` : ''}
+      ${!isSelf ? `<button class="btn btn-danger btn-sm" onclick="excluirUsuario('${u.id}')">🗑️</button>` : ''}
     </div>`;
-  }).join('');
+    }).join('');
+  });
 }
 
 function criarUsuario() {
-  const nome = document.getElementById('nu-nome').value.trim();
+  const nome    = document.getElementById('nu-nome').value.trim();
   const usuario = document.getElementById('nu-user').value.trim().toLowerCase();
-  const senha = document.getElementById('nu-pass').value;
-  const nivel = document.getElementById('nu-nivel').value;
+  const senha   = document.getElementById('nu-pass').value;
+  const nivel   = document.getElementById('nu-nivel').value;
   if (!nome || !usuario || !senha) { alert('Preencha todos os campos!'); return; }
   if (senha.length < 4) { alert('Senha deve ter pelo menos 4 caracteres!'); return; }
-  const lista = loadUsuarios();
-  if (lista.find(u => u.usuario === usuario)) { alert('Este nome de usuário já existe!'); return; }
-  // Cria usuário via Supabase Auth (email = usuario@joaodoacai.app)
-  sb.auth.admin ? console.log('use service key for admin') : null;
-  // Para criar usuários, use o painel do Supabase → Authentication → Users
-  // Ou implemente com service_role key no backend
-  showToast('Para criar usuários, acesse o painel do Supabase → Authentication → Users', 'error');
-  // Futuramente: endpoint serverless para criar usuário
-  ['nu-nome','nu-user','nu-pass'].forEach(id => document.getElementById(id).value='');
+
+  // Ler permissões dos checkboxes
+  const permissoes = {
+    cadastrarProduto:  document.getElementById('perm-cadastrarProduto')?.checked  || false,
+    editarProduto:     document.getElementById('perm-editarProduto')?.checked     || false,
+    excluirProduto:    document.getElementById('perm-excluirProduto')?.checked    || false,
+    verRelatorios:     document.getElementById('perm-verRelatorios')?.checked     || false,
+    verDesperdicio:    document.getElementById('perm-verDesperdicio')?.checked    || false,
+    gerenciarUsuarios: document.getElementById('perm-gerenciarUsuarios')?.checked || false,
+    fazerTransferencia:document.getElementById('perm-fazerTransferencia')?.checked|| false,
+    fazerMovimentacao: document.getElementById('perm-fazerMovimentacao')?.checked || false,
+  };
+
+  const email = `${usuario}@joaodoacai.app`;
+  showToast('Criando usuário…');
+
+  fetch('https://swploujmyimwmlsozpqg.supabase.co/functions/v1/criar-usuario', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sb.supabaseKey}` },
+    body: JSON.stringify({ email, password: senha, nome, nivel, permissoes })
+  })
+  .then(r => r.json())
+  .then(async res => {
+    if (res.error) {
+      // Fallback: orienta a criar pelo Supabase mas salva as permissões de qualquer forma
+      showToast('Crie o usuário no painel do Supabase e as permissões serão aplicadas no primeiro login.', 'error');
+      // Salva configuração pendente em localStorage para aplicar depois
+      const pending = JSON.parse(localStorage.getItem('pending_perms') || '{}');
+      pending[email] = { nome, nivel, permissoes };
+      localStorage.setItem('pending_perms', JSON.stringify(pending));
+      return;
+    }
+    // Atualiza perfil com permissões customizadas
+    if (res.user_id) {
+      await sb.from('perfis').upsert([{
+        id: res.user_id, nome, nivel, permissoes,
+        usuario: usuario
+      }]);
+    }
+    ['nu-nome','nu-user','nu-pass'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('nu-nivel').value = 'operador';
+    aplicarPerfilBase();
+    showToast(`✅ Usuário ${nome} criado com sucesso!`);
+    renderUsuarios();
+  })
+  .catch(() => {
+    showToast('Crie o usuário no painel Supabase → Authentication → Users e depois edite as permissões aqui.', 'error');
+  });
 }
 
 function excluirUsuario(id) {
@@ -1997,6 +2113,7 @@ function showToast(msg, tipo='success') {
 }
 
 function salvarTransferencia() {
+  if (!temPermissao('fazerTransferencia')) { showToast('⛔ Sem permissão para transferir estoque!', 'error'); return; }
   const prodId = parseInt(document.getElementById('transf-produto').value);
   const para   = document.getElementById('transf-para').value;
   const qty    = parseFloat(document.getElementById('transf-qty').value) || 0;
@@ -2922,9 +3039,10 @@ function renderAll() {
     const { data: perfil } = await sb.from('perfis').select('*').eq('id', session.user.id).single();
     const emailUser = session.user.email.replace('@joaodoacai.app','');
     usuarioLogado = {
-      id:      session.user.id,
-      nome:    perfil?.nome    || emailUser,
-      usuario: emailUser,
+      id:          session.user.id,
+      nome:        perfil?.nome    || emailUser,
+      usuario:     emailUser,
+      permissoes:  perfil?.permissoes || null,
       nivel:   perfil?.nivel   || 'operador',
       senha:   ''
     };
