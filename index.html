@@ -433,10 +433,80 @@
     .cards-grid { grid-template-columns: 1fr !important; }
   }
 
+
+  /* Busca nos setores */
+  .setor-search {
+    display:flex;align-items:center;gap:8px;
+    background:white;border:1.5px solid var(--border);
+    border-radius:10px;padding:7px 12px;
+    transition:border-color 0.2s;
+  }
+  .setor-search:focus-within { border-color:var(--roxo-mid); }
+  .setor-search input {
+    border:none;outline:none;background:none;
+    font-family:'DM Sans',sans-serif;font-size:13px;
+    color:var(--text-main);width:180px;
+  }
+  .setor-search input::placeholder { color:var(--text-light); }
+  .setor-search .clear-btn {
+    background:none;border:none;cursor:pointer;
+    color:var(--text-light);font-size:14px;padding:0;line-height:1;
+    display:none;
+  }
+  .setor-search input:not(:placeholder-shown) ~ .clear-btn { display:block; }
+
+
+
+  /* ===== CADASTRO EM MASSA ===== */
+  .massa-tabs { display:flex;gap:4px;margin-bottom:20px;background:var(--creme);border-radius:10px;padding:4px; }
+  .massa-tab  { flex:1;padding:9px;border:none;background:none;border-radius:8px;font-family:'DM Sans',sans-serif;
+                font-size:13px;font-weight:500;color:var(--text-light);cursor:pointer;transition:all .2s; }
+  .massa-tab.active { background:white;color:var(--text-main);box-shadow:0 1px 4px rgba(0,0,0,.1);font-weight:600; }
+  .massa-panel { display:none; }
+  .massa-panel.active { display:block; }
+
+  /* Tabela de digitação */
+  .massa-grid { width:100%;border-collapse:collapse;font-size:13px; }
+  .massa-grid th { background:var(--creme);padding:8px 10px;font-size:11px;font-weight:600;
+                   color:var(--text-light);text-transform:uppercase;letter-spacing:.6px;
+                   border-bottom:1px solid var(--border);text-align:left; }
+  .massa-grid td { padding:4px 4px;border-bottom:1px solid #f5f5f5;vertical-align:middle; }
+  .massa-grid tr:last-child td { border-bottom:none; }
+  .mg-input { width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;
+              font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-main);
+              background:white;transition:border-color .2s; }
+  .mg-input:focus { outline:none;border-color:var(--roxo-mid); }
+  .mg-select { width:100%;padding:6px 6px;border:1.5px solid var(--border);border-radius:7px;
+               font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-main);
+               background:white;cursor:pointer; }
+  .mg-select:focus { outline:none;border-color:var(--roxo-mid); }
+  .mg-del { background:none;border:none;cursor:pointer;color:#C0392B;font-size:15px;padding:4px 8px;border-radius:6px; }
+  .mg-del:hover { background:#FEF2F2; }
+  .massa-add-row { display:flex;justify-content:flex-start;margin-top:10px; }
+
+  /* Drop zone CSV */
+  .csv-drop { border:2px dashed var(--border);border-radius:12px;padding:36px 20px;
+              text-align:center;cursor:pointer;transition:all .2s;background:var(--creme); }
+  .csv-drop:hover, .csv-drop.drag-over { border-color:var(--roxo-mid);background:#F4ECF7; }
+  .csv-drop .icon { font-size:36px;margin-bottom:10px; }
+  .csv-drop p { font-size:13px;color:var(--text-light);margin:0; }
+  .csv-drop strong { color:var(--text-main); }
+  .csv-preview { margin-top:16px;max-height:240px;overflow-y:auto;border-radius:10px;
+                 border:1px solid var(--border);background:white; }
+  .csv-preview table { width:100%;border-collapse:collapse;font-size:12px; }
+  .csv-preview th { background:var(--creme);padding:7px 10px;font-size:11px;font-weight:600;
+                    color:var(--text-light);text-transform:uppercase;border-bottom:1px solid var(--border); }
+  .csv-preview td { padding:7px 10px;border-bottom:1px solid #f5f5f5; }
+  .csv-preview tr.row-erro td { background:#FEF2F2;color:#C0392B; }
+  .massa-result { margin-top:14px;padding:12px 16px;border-radius:10px;font-size:13px;display:none; }
+  .massa-result.ok  { background:#EAFAF1;border:1px solid #A9DFBF;color:#1E8449; }
+  .massa-result.err { background:#FEF2F2;border:1px solid #F1948A;color:#922B21; }
+
 </style>
 
 <!-- ====== SUPABASE ====== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script>
 // ============================================================
 // CONFIGURAÇÃO SUPABASE — substitua pelos seus valores
@@ -824,6 +894,14 @@ async function carregarDados() {
         <div class="setor-icon-big" style="background:var(--buffet-bg)">🍨</div>
         <div><h2>Buffet</h2><p>Controle de estoque da área de atendimento</p></div>
       </div>
+      <div style="margin-bottom:14px">
+        <div class="setor-search">
+          <span>🔍</span>
+          <input type="text" id="search-buffet" placeholder="Buscar produto no Buffet…"
+            oninput="renderSetor('buffet')" onkeydown="if(event.key==='Escape'){this.value='';renderSetor('buffet')}">
+          <button class="clear-btn" onclick="document.getElementById('search-buffet').value='';renderSetor('buffet')">✕</button>
+        </div>
+      </div>
       <div id="setor-content-buffet"></div>
     </div>
 
@@ -833,6 +911,14 @@ async function carregarDados() {
         <div class="setor-icon-big" style="background:var(--cozinha-bg)">👨‍🍳</div>
         <div><h2>Cozinha</h2><p>Controle de estoque da área de produção</p></div>
       </div>
+      <div style="margin-bottom:14px">
+        <div class="setor-search">
+          <span>🔍</span>
+          <input type="text" id="search-cozinha" placeholder="Buscar produto na Cozinha…"
+            oninput="renderSetor('cozinha')" onkeydown="if(event.key==='Escape'){this.value='';renderSetor('cozinha')}">
+          <button class="clear-btn" onclick="document.getElementById('search-cozinha').value='';renderSetor('cozinha')">✕</button>
+        </div>
+      </div>
       <div id="setor-content-cozinha"></div>
     </div>
 
@@ -841,6 +927,14 @@ async function carregarDados() {
       <div class="setor-header">
         <div class="setor-icon-big" style="background:var(--deposito-bg)">🏭</div>
         <div><h2>Estoque / Depósito</h2><p>Controle do armazenamento geral</p></div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="setor-search">
+          <span>🔍</span>
+          <input type="text" id="search-deposito" placeholder="Buscar produto no Depósito…"
+            oninput="renderSetor('deposito')" onkeydown="if(event.key==='Escape'){this.value='';renderSetor('deposito')}">
+          <button class="clear-btn" onclick="document.getElementById('search-deposito').value='';renderSetor('deposito')">✕</button>
+        </div>
       </div>
       <div id="setor-content-deposito"></div>
     </div>
@@ -1011,6 +1105,7 @@ async function carregarDados() {
           <h2>Todos os Produtos</h2>
           <div class="table-header-right">
             <div class="search-box"><span>🔍</span><input type="text" id="search-prod" placeholder="Buscar..." oninput="renderProdutos()"></div>
+            <button class="btn btn-outline btn-sm" onclick="openModal('modal-massa')">📋 Cadastro em Massa</button>
             <button class="btn btn-primary btn-sm" onclick="abrirModalProduto()">+ Novo</button>
           </div>
         </div>
@@ -1240,8 +1335,84 @@ async function carregarDados() {
       </div>
     </div>
 
+
   </div>
 </main>
+
+
+<!-- ====== MODAL CADASTRO EM MASSA ====== -->
+<div class="modal-overlay" id="modal-massa">
+  <div class="modal" style="width:860px;max-height:90vh;overflow-y:auto">
+    <h2>📋 Cadastro em Massa</h2>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">
+      Cadastre vários produtos de uma vez digitando na tabela ou importando uma planilha CSV.
+    </p>
+
+    <!-- Abas -->
+    <div class="massa-tabs">
+      <button class="massa-tab active" onclick="massaTab('digitar')">✏️ Digitar na tabela</button>
+      <button class="massa-tab"        onclick="massaTab('csv')">📂 Importar CSV / Excel</button>
+    </div>
+
+    <!-- PAINEL: Digitar -->
+    <div class="massa-panel active" id="massa-panel-digitar">
+      <div style="overflow-x:auto">
+        <table class="massa-grid">
+          <thead>
+            <tr>
+              <th style="min-width:160px">Nome *</th>
+              <th style="min-width:120px">Categoria *</th>
+              <th style="min-width:100px">Setor *</th>
+              <th style="min-width:80px">Tipo *</th>
+              <th style="min-width:70px">Unidade</th>
+              <th style="min-width:80px">Qtd Inicial</th>
+              <th style="min-width:70px">Mínimo</th>
+              <th style="min-width:90px">Custo (R$)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="massa-tbody"></tbody>
+        </table>
+      </div>
+      <div class="massa-add-row">
+        <button class="btn btn-outline btn-sm" onclick="massaAddRow()">＋ Adicionar linha</button>
+      </div>
+      <div class="massa-result" id="massa-result-digitar"></div>
+    </div>
+
+    <!-- PAINEL: CSV -->
+    <div class="massa-panel" id="massa-panel-csv">
+      <div style="background:#EAF2FF;border:1px solid #AED6F1;border-radius:10px;padding:12px 16px;font-size:13px;color:#1A5276;margin-bottom:16px;line-height:1.8">
+        📌 <strong>Formato do arquivo CSV:</strong><br>
+        A primeira linha deve ser o cabeçalho com as colunas na ordem:<br>
+        <code style="background:white;padding:2px 6px;border-radius:4px;font-size:12px">nome, categoria, setor, tipo, unidade, qty, min, custo</code><br>
+        <strong>setor:</strong> buffet / cozinha / deposito &nbsp;|&nbsp;
+        <strong>tipo:</strong> peso / unidade<br>
+        <a id="massa-download-modelo" href="#" onclick="massaDownloadModelo(event)"
+           style="color:var(--roxo-mid);font-weight:600">⬇️ Baixar modelo CSV</a>
+      </div>
+
+      <div class="csv-drop" id="csv-drop"
+           onclick="document.getElementById('csv-file').click()"
+           ondragover="csvDragOver(event)" ondragleave="csvDragLeave(event)" ondrop="csvDrop(event)">
+        <div class="icon">📂</div>
+        <p><strong>Clique aqui</strong> ou arraste o arquivo CSV / Excel</p>
+        <p style="margin-top:6px;font-size:12px">Formatos aceitos: .csv • .xlsx • .xls</p>
+      </div>
+      <input type="file" id="csv-file" accept=".csv,.xlsx,.xls" style="display:none"
+             onchange="csvLerArquivo(this)">
+
+      <div class="csv-preview" id="csv-preview" style="display:none"></div>
+      <div class="massa-result" id="massa-result-csv"></div>
+    </div>
+
+    <!-- Ações -->
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn btn-outline" onclick="closeModal('modal-massa')">Cancelar</button>
+      <button class="btn btn-primary" id="massa-btn-salvar" onclick="massaSalvar()">💾 Cadastrar Todos</button>
+    </div>
+  </div>
+</div>
 
 <!-- ====== MODAL DESPERDÍCIO ====== -->
 <div class="modal-overlay" id="modal-desperdicio">
@@ -1473,6 +1644,12 @@ async function carregarDados() {
     <h2>🔄 Registrar Movimentação</h2>
     <div class="form-group">
       <label>Produto</label>
+      <div class="setor-search" style="margin-bottom:8px">
+        <span>🔍</span>
+        <input type="text" id="search-mov" placeholder="Filtrar produto…"
+          oninput="populateMovSel('mov-produto', null, this.value)">
+        <button class="clear-btn" onclick="document.getElementById('search-mov').value='';populateMovSel('mov-produto')">✕</button>
+      </div>
       <select id="mov-produto" onchange="onMovProdChange()">
         <option value="">Selecione...</option>
       </select>
@@ -1508,6 +1685,12 @@ async function carregarDados() {
     <h2>↔️ Transferência entre Setores</h2>
     <div class="form-group">
       <label>Produto</label>
+      <div class="setor-search" style="margin-bottom:8px">
+        <span>🔍</span>
+        <input type="text" id="search-transf" placeholder="Filtrar produto…"
+          oninput="populateMovSel('transf-produto', null, this.value)">
+        <button class="clear-btn" onclick="document.getElementById('search-transf').value='';populateMovSel('transf-produto')">✕</button>
+      </div>
       <select id="transf-produto" onchange="onTransfProdChange()">
         <option value="">Selecione...</option>
       </select>
@@ -1814,8 +1997,16 @@ const _openModal = function(id) {
     if (!temPermissao('gerenciarUsuarios')) { alert('⛔ Sem permissão para esta ação!'); return; }
     renderUsuarios();
   }
-  if (id === 'modal-mov') populateMovSel('mov-produto');
-  if (id === 'modal-transfer') populateMovSel('transf-produto');
+  if (id === 'modal-mov') {
+    const si = document.getElementById('search-mov');
+    if(si) si.value='';
+    populateMovSel('mov-produto');
+  }
+  if (id === 'modal-transfer') {
+    const si = document.getElementById('search-transf');
+    if(si) si.value='';
+    populateMovSel('transf-produto');
+  }
   document.getElementById(id).classList.add('open');
 };
 // ======== FIM AUTENTICAÇÃO ========
@@ -1873,6 +2064,7 @@ function showSection(id) {
 }
 
 function showSetor(s) { showSection(s); }
+
 
 // ---- MODAL ----
 function openModal(id) { _openModal(id); }
@@ -2035,10 +2227,16 @@ function excluirProduto(id) {
 }
 
 // ---- MOVIMENTAÇÃO ----
-function populateMovSel(selId, preselect) {
+function populateMovSel(selId, preselect, filtro) {
   const sel = document.getElementById(selId);
+  const termo = (filtro || '').toLowerCase().trim();
+  const lista = termo
+    ? produtos.filter(p => p.nome.toLowerCase().includes(termo) ||
+                           p.categoria.toLowerCase().includes(termo) ||
+                           SETORES[p.setor].nome.toLowerCase().includes(termo))
+    : produtos;
   sel.innerHTML = '<option value="">Selecione...</option>';
-  produtos.forEach(p => {
+  lista.forEach(p => {
     const st = SETORES[p.setor];
     sel.innerHTML += `<option value="${p.id}">${st.emoji} [${st.nome}] ${p.nome} — ${fmtQty(p)} ${p.unidade}</option>`;
   });
@@ -2287,7 +2485,14 @@ function renderDashboard() {
 
 // ---- RENDER SETOR ----
 function renderSetor(s) {
-  const lista = produtos.filter(p=>p.setor===s);
+  const busca = (document.getElementById('search-'+s)?.value || '').toLowerCase().trim();
+  const lista = produtos.filter(p => {
+    if (p.setor !== s) return false;
+    if (!busca) return true;
+    return p.nome.toLowerCase().includes(busca) ||
+           p.categoria.toLowerCase().includes(busca) ||
+           p.unidade.toLowerCase().includes(busca);
+  });
   const st = SETORES[s];
   const el = document.getElementById('setor-content-'+s);
   if (!el) return;
@@ -3203,6 +3408,341 @@ function closeFab() {
   document.getElementById('fab-btn').textContent = '＋';
 }
 // ============================================================
+
+
+// ============================================================
+// CADASTRO EM MASSA
+// ============================================================
+
+const CATEGORIAS_LISTA = [
+  'Açaí & Bases','Frutas','Complementos','Caldas & Cremes',
+  'Granolas & Farinhas','Embalagens','Bebidas','Laticínios',
+  'Congelados','Higiene & Limpeza','Outros'
+];
+
+// Linha vazia padrão
+function massaLinhaHTML(i) {
+  const catOpts = CATEGORIAS_LISTA.map(c =>
+    `<option value="${c}">${c}</option>`).join('');
+  return `<tr id="massa-row-${i}">
+    <td><input class="mg-input" placeholder="Nome do produto" id="mg-nome-${i}"></td>
+    <td><select class="mg-select" id="mg-cat-${i}">
+          <option value="">Selecione...</option>${catOpts}</select></td>
+    <td><select class="mg-select" id="mg-setor-${i}">
+          <option value="">Selecione...</option>
+          <option value="buffet">🍨 Buffet</option>
+          <option value="cozinha">👨‍🍳 Cozinha</option>
+          <option value="deposito">🏭 Depósito</option></select></td>
+    <td><select class="mg-select" id="mg-tipo-${i}" onchange="massaAtualizaUnidade(${i})">
+          <option value="unidade">📦 Un.</option>
+          <option value="peso">⚖️ Peso</option></select></td>
+    <td><select class="mg-select" id="mg-und-${i}">
+          <option value="un">un</option>
+          <option value="cx">cx</option>
+          <option value="pct">pct</option>
+          <option value="fardo">fardo</option>
+          <option value="dz">dz</option></select></td>
+    <td><input class="mg-input" type="number" min="0" step="0.001" placeholder="0" id="mg-qty-${i}" style="text-align:right"></td>
+    <td><input class="mg-input" type="number" min="0" step="0.001" placeholder="0" id="mg-min-${i}" style="text-align:right"></td>
+    <td><input class="mg-input" type="number" min="0" step="0.01"  placeholder="0,00" id="mg-custo-${i}" style="text-align:right"></td>
+    <td><button class="mg-del" onclick="massaDelRow(${i})" title="Remover">✕</button></td>
+  </tr>`;
+}
+
+let massaRowCount = 0;
+
+function massaInicializar() {
+  const tbody = document.getElementById('massa-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  massaRowCount = 0;
+  // Começa com 5 linhas vazias
+  for (let i = 0; i < 5; i++) massaAddRow();
+}
+
+function massaAddRow() {
+  const tbody = document.getElementById('massa-tbody');
+  if (!tbody) return;
+  const i = massaRowCount++;
+  const tr = document.createElement('tr');
+  tr.id = 'massa-row-' + i;
+  tr.innerHTML = massaLinhaHTML(i).replace(/^<tr[^>]*>/, '').replace(/<\/tr>$/, '');
+  tbody.appendChild(tr);
+}
+
+function massaDelRow(i) {
+  const row = document.getElementById('massa-row-' + i);
+  if (row) row.remove();
+}
+
+function massaAtualizaUnidade(i) {
+  const tipo = document.getElementById('mg-tipo-' + i)?.value;
+  const sel  = document.getElementById('mg-und-' + i);
+  if (!sel) return;
+  if (tipo === 'peso') {
+    sel.innerHTML = '<option value="kg">kg</option><option value="g">g</option><option value="L">L</option><option value="ml">ml</option>';
+  } else {
+    sel.innerHTML = '<option value="un">un</option><option value="cx">cx</option><option value="pct">pct</option><option value="fardo">fardo</option><option value="dz">dz</option>';
+  }
+}
+
+function massaTab(tab) {
+  document.querySelectorAll('.massa-tab').forEach((t,i) => {
+    const tabs = ['digitar','csv'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.massa-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('massa-panel-' + tab)?.classList.add('active');
+}
+
+// Coletar linhas digitadas
+function massaColetarLinhas() {
+  const rows = document.querySelectorAll('#massa-tbody tr');
+  const lista = [];
+  rows.forEach(row => {
+    const i = row.id.replace('massa-row-','');
+    const nome  = document.getElementById('mg-nome-' + i)?.value.trim();
+    const cat   = document.getElementById('mg-cat-' + i)?.value;
+    const setor = document.getElementById('mg-setor-' + i)?.value;
+    const tipo  = document.getElementById('mg-tipo-' + i)?.value;
+    const und   = document.getElementById('mg-und-' + i)?.value || 'un';
+    const qty   = parseFloat(document.getElementById('mg-qty-' + i)?.value) || 0;
+    const min   = parseFloat(document.getElementById('mg-min-' + i)?.value) || 0;
+    const custo = parseFloat(document.getElementById('mg-custo-' + i)?.value) || 0;
+    if (nome && cat && setor && tipo) {
+      lista.push({ nome, categoria: cat, setor, tipo, unidade: und, qty, min, custo });
+    }
+  });
+  return lista;
+}
+
+// Salvar (digital ou CSV)
+async function massaSalvar() {
+  const tabAtiva = document.querySelector('.massa-panel.active')?.id;
+  const isCSV    = tabAtiva === 'massa-panel-csv';
+  const lista    = isCSV ? massaCSVDados : massaColetarLinhas();
+
+  if (!lista || lista.length === 0) {
+    showToast('Nenhum produto válido para cadastrar!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('massa-btn-salvar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Cadastrando…';
+
+  let ok = 0, erros = 0;
+  for (const p of lista) {
+    try {
+      const { data, error } = await sb.from('produtos').insert([{
+        nome: p.nome, categoria: p.categoria, setor: p.setor,
+        tipo: p.tipo, unidade: p.unidade,
+        qty: p.qty || 0, min: p.min || 0, custo: p.custo || 0,
+        ativo: true, transferivel: true
+      }]).select().single();
+
+      if (error) { erros++; continue; }
+
+      // Registrar estoque inicial se qty > 0
+      if (p.qty > 0 && data?.id) {
+        await sb.from('movimentacoes').insert([{
+          prod_id: data.id, setor: p.setor, tipo: 'entrada',
+          qty: p.qty, obs: 'Estoque inicial (cadastro em massa)',
+          usuario_id: usuarioLogado?.id
+        }]);
+      }
+      ok++;
+    } catch(e) { erros++; }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Cadastrar Todos';
+
+  const resEl = document.getElementById(isCSV ? 'massa-result-csv' : 'massa-result-digitar');
+  if (resEl) {
+    resEl.style.display = 'block';
+    if (erros === 0) {
+      resEl.className = 'massa-result ok';
+      resEl.innerHTML = '✅ ' + ok + ' produto(s) cadastrado(s) com sucesso!';
+    } else {
+      resEl.className = 'massa-result err';
+      resEl.innerHTML = '⚠️ ' + ok + ' cadastrado(s) | ' + erros + ' erro(s). Verifique os dados e tente novamente.';
+    }
+  }
+
+  await carregarDados();
+  if (ok > 0) {
+    showToast('✅ ' + ok + ' produto(s) cadastrado(s)!');
+    if (!isCSV) massaInicializar(); // Limpa as linhas
+  }
+}
+
+// ---- CSV / EXCEL ----
+let massaCSVDados = [];
+
+function csvDragOver(e)  { e.preventDefault(); document.getElementById('csv-drop')?.classList.add('drag-over'); }
+function csvDragLeave(e) { document.getElementById('csv-drop')?.classList.remove('drag-over'); }
+function csvDrop(e) {
+  e.preventDefault();
+  csvDragLeave(e);
+  const file = e.dataTransfer?.files[0];
+  if (file) csvProcessar(file);
+}
+function csvLerArquivo(input) {
+  const file = input.files[0];
+  if (file) csvProcessar(file);
+  input.value = '';
+}
+
+function csvProcessar(file) {
+  const nome = file.name.toLowerCase();
+  if (nome.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = e => csvParseText(e.target.result);
+    reader.readAsText(file, 'utf-8');
+  } else if (nome.endsWith('.xlsx') || nome.endsWith('.xls')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, {type:'binary'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csvText = XLSX.utils.sheet_to_csv(ws);
+        csvParseText(csvText);
+      } catch(err) {
+        showToast('Erro ao ler o arquivo Excel. Tente salvar como CSV.', 'error');
+      }
+    };
+    reader.readAsBinaryString(file);
+  } else {
+    showToast('Formato não suportado. Use .csv, .xlsx ou .xls', 'error');
+  }
+}
+
+function csvParseText(text) {
+  const linhas = text.trim().split('\n').filter(l => l.trim());
+  if (linhas.length < 2) { showToast('Arquivo vazio ou sem dados!', 'error'); return; }
+
+  // Detectar separador (, ou ;)
+  const sep = linhas[0].includes(';') ? ';' : ',';
+  const cabecalho = linhas[0].split(sep).map(c => c.trim().toLowerCase().replace(/[^a-z]/g,''));
+
+  // Mapeamento flexível de colunas
+  const colIdx = {
+    nome:      cabecalho.findIndex(c => c.includes('nom')),
+    categoria: cabecalho.findIndex(c => c.includes('cat')),
+    setor:     cabecalho.findIndex(c => c.includes('set')),
+    tipo:      cabecalho.findIndex(c => c.includes('tip')),
+    unidade:   cabecalho.findIndex(c => c.includes('uni') || c.includes('und')),
+    qty:       cabecalho.findIndex(c => c.includes('qty') || c.includes('qtd') || c.includes('quan') || c.includes('est')),
+    min:       cabecalho.findIndex(c => c.includes('min')),
+    custo:     cabecalho.findIndex(c => c.includes('cus') || c.includes('pre')),
+  };
+
+  const dados = [];
+  const errosLinha = [];
+
+  linhas.slice(1).forEach((linha, idx) => {
+    const cols = linha.split(sep).map(c => c.trim().replace(/^"|"$/g,''));
+    const nome  = colIdx.nome >= 0  ? cols[colIdx.nome]?.trim()  : '';
+    const cat   = colIdx.categoria >= 0 ? cols[colIdx.categoria]?.trim() : 'Outros';
+    const setor = (colIdx.setor >= 0 ? cols[colIdx.setor]?.trim().toLowerCase() : '');
+    const tipo  = (colIdx.tipo >= 0  ? cols[colIdx.tipo]?.trim().toLowerCase()  : 'unidade');
+    const und   = colIdx.unidade >= 0 ? cols[colIdx.unidade]?.trim() : 'un';
+    const qty   = parseFloat((colIdx.qty >= 0 ? cols[colIdx.qty] : '0')?.replace(',','.')) || 0;
+    const min   = parseFloat((colIdx.min >= 0 ? cols[colIdx.min] : '0')?.replace(',','.')) || 0;
+    const custo = parseFloat((colIdx.custo >= 0 ? cols[colIdx.custo] : '0')?.replace(',','.')) || 0;
+
+    const setorVal = setor.includes('buf') ? 'buffet' : setor.includes('coz') ? 'cozinha' : setor.includes('dep') || setor.includes('est') ? 'deposito' : setor;
+    const tipoVal  = tipo.includes('pes') || tipo.includes('kg') || tipo.includes('g') ? 'peso' : 'unidade';
+
+    if (!nome) { errosLinha.push(idx+2); return; }
+    if (!['buffet','cozinha','deposito'].includes(setorVal)) { errosLinha.push(idx+2); return; }
+
+    dados.push({ nome, categoria: cat||'Outros', setor: setorVal, tipo: tipoVal, unidade: und||'un', qty, min, custo, _linha: idx+2 });
+  });
+
+  massaCSVDados = dados;
+  csvMostrarPreview(dados, errosLinha);
+}
+
+function csvMostrarPreview(dados, erros) {
+  const div = document.getElementById('csv-preview');
+  if (!div) return;
+
+  if (dados.length === 0 && erros.length === 0) {
+    div.style.display = 'none';
+    showToast('Nenhum produto válido encontrado no arquivo.', 'error');
+    return;
+  }
+
+  div.style.display = 'block';
+  div.innerHTML = `<table>
+    <thead><tr><th>#</th><th>Nome</th><th>Categoria</th><th>Setor</th><th>Tipo</th><th>Und</th><th>Qtd</th><th>Mín</th><th>Custo</th><th>Status</th></tr></thead>
+    <tbody>
+      ${dados.map(p => `<tr>
+        <td style="color:var(--text-light)">${p._linha}</td>
+        <td><strong>${p.nome}</strong></td>
+        <td>${p.categoria}</td>
+        <td>${SETORES[p.setor]?.emoji || ''} ${p.setor}</td>
+        <td>${p.tipo}</td>
+        <td>${p.unidade}</td>
+        <td>${p.qty}</td>
+        <td>${p.min}</td>
+        <td>${p.custo ? fmtBRL(p.custo) : '—'}</td>
+        <td><span class="tag-ok">✅ OK</span></td>
+      </tr>`).join('')}
+      ${erros.map(l => `<tr class="row-erro"><td>${l}</td><td colspan="9">⚠️ Linha inválida — nome ou setor ausente/incorreto</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+
+  const res = document.getElementById('massa-result-csv');
+  if (res) {
+    res.style.display = 'block';
+    res.className = dados.length > 0 ? 'massa-result ok' : 'massa-result err';
+    res.innerHTML = dados.length > 0
+      ? '📋 ' + dados.length + ' produto(s) prontos para cadastrar' + (erros.length ? ' | ⚠️ ' + erros.length + ' linha(s) ignorada(s)' : '')
+      : '❌ Nenhum produto válido encontrado.';
+  }
+}
+
+function massaDownloadModelo(e) {
+  e.preventDefault();
+  const linhas = [
+    'nome,categoria,setor,tipo,unidade,qty,min,custo',
+    'Açaí 10L,Açaí & Bases,deposito,peso,L,50,10,25.90',
+    'Granola Tradicional,Granolas & Farinhas,buffet,peso,kg,8,2,18.50',
+    'Copo 500ml,Embalagens,deposito,unidade,cx,10,2,45.00',
+    'Leite Condensado,Caldas & Cremes,cozinha,unidade,un,24,6,4.80',
+  ];
+  const blob = new Blob([linhas.join('\n')], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'modelo_produtos.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Inicializar ao abrir o modal
+const _origOpenModalMassa = window._openModal || (id => {});
+// Hook no openModal existente
+(function() {
+  const orig = openModal;
+  openModal = function(id) {
+    orig(id);
+    if (id === 'modal-massa') {
+      massaInicializar();
+      massaCSVDados = [];
+      const prev = document.getElementById('csv-preview');
+      if (prev) prev.style.display = 'none';
+      ['massa-result-digitar','massa-result-csv'].forEach(rid => {
+        const el = document.getElementById(rid);
+        if (el) el.style.display = 'none';
+      });
+      massaTab('digitar');
+    }
+  };
+})();
+// ============================================================
+
 // ======== FIM BACKUP ========
 </script>
 </body>
