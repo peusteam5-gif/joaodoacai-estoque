@@ -2291,12 +2291,11 @@ function salvarMovimentacao() {
     showToast('⛔ Você não tem permissão para dar entrada no estoque!', 'error');
     return;
   }
-  const prod = produtos.find(p => p.id === prodId);
-  if (prod && prod.setor === 'deposito' && !temPermissao('acessarDeposito')) {
+  const prod = produtos.find(p => p.id === prodId); if (!prod) return;
+  if (prod.setor === 'deposito' && !temPermissao('acessarDeposito')) {
     showToast('⛔ No Depósito você só pode fazer transferências!', 'error');
     return;
   }
-  const prod = produtos.find(p => p.id === prodId); if (!prod) return;
   if (tipo === 'saida' && qty > prod.qty) { alert(`Estoque insuficiente!\nAtual: ${fmtQty(prod)} ${prod.unidade}`); return; }
   const novaQty = tipo === 'entrada' ? prod.qty + qty : Math.max(0, prod.qty - qty);
   Promise.all([
