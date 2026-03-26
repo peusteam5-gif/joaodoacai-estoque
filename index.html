@@ -682,6 +682,9 @@ async function carregarDados() {
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
           <input type="checkbox" id="perm-fazerMovimentacao" checked> 🔄 Movimentar estoque
         </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:7px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
+          <input type="checkbox" id="perm-darEntrada"> 📥 Dar entrada no estoque
+        </label>
       </div>
     </div>
 
@@ -1757,9 +1760,9 @@ const NIVEIS = {
 
 // Permissões padrão por perfil (usadas ao selecionar perfil base)
 const PERMS_PADRAO = {
-  admin:   { excluirProduto:true,  cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:true,  verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true  },
-  gerente: { excluirProduto:false, cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:false, verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true  },
-  operador:{ excluirProduto:false, cadastrarProduto:false, editarProduto:false, gerenciarUsuarios:false, verRelatorios:false, verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true  }
+  admin:   { excluirProduto:true,  cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:true,  verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:true  },
+  gerente: { excluirProduto:false, cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:false, verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:true  },
+  operador:{ excluirProduto:false, cadastrarProduto:false, editarProduto:false, gerenciarUsuarios:false, verRelatorios:false, verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:false }
 };
 
 // Compatibilidade: PERMS agora aponta para PERMS_PADRAO
@@ -1778,6 +1781,7 @@ function aplicarPerfilBase() {
     'perm-gerenciarUsuarios': p.gerenciarUsuarios,
     'perm-fazerTransferencia':p.fazerTransferencia,
     'perm-fazerMovimentacao': p.fazerMovimentacao,
+    'perm-darEntrada':        p.darEntrada,
   };
   Object.entries(map).forEach(([id, val]) => {
     const el = document.getElementById(id);
@@ -1863,8 +1867,14 @@ function aplicarPermissoes() {
 
 function temPermissao(perm) {
   if (!usuarioLogado) return false;
+  // Admin sempre tem tudo
+  if (usuarioLogado.nivel === 'admin' && !usuarioLogado.permissoes) return true;
   // Se o perfil tem permissões customizadas, usa elas
   if (usuarioLogado.permissoes && typeof usuarioLogado.permissoes === 'object') {
+    // darEntrada não definida = true por padrão para admin
+    if (perm === 'darEntrada' && usuarioLogado.permissoes[perm] === undefined) {
+      return usuarioLogado.nivel === 'admin';
+    }
     return usuarioLogado.permissoes[perm] === true;
   }
   // Fallback: permissões padrão do nível
@@ -1934,6 +1944,7 @@ function criarUsuario() {
     gerenciarUsuarios: document.getElementById('perm-gerenciarUsuarios')?.checked || false,
     fazerTransferencia:document.getElementById('perm-fazerTransferencia')?.checked|| false,
     fazerMovimentacao: document.getElementById('perm-fazerMovimentacao')?.checked || false,
+    darEntrada:        document.getElementById('perm-darEntrada')?.checked         || false,
   };
 
   const email = `${usuario}@joaodoacai.app`;
@@ -2009,6 +2020,16 @@ const _openModal = function(id) {
     const si = document.getElementById('search-mov');
     if(si) si.value='';
     populateMovSel('mov-produto');
+    // Ocultar opção Entrada se não tiver permissão
+    const selTipo = document.getElementById('mov-tipo');
+    if (selTipo) {
+      const optEntrada = selTipo.querySelector('option[value="entrada"]');
+      if (optEntrada) {
+        optEntrada.style.display = temPermissao('darEntrada') ? '' : 'none';
+        optEntrada.disabled = !temPermissao('darEntrada');
+      }
+      if (!temPermissao('darEntrada')) selTipo.value = 'saida';
+    }
   }
   if (id === 'modal-transfer') {
     const si = document.getElementById('search-transf');
@@ -2274,6 +2295,10 @@ function salvarMovimentacao() {
   const qty = parseFloat(document.getElementById('mov-qty').value) || 0;
   const obs = document.getElementById('mov-obs').value.trim();
   if (!prodId || qty <= 0) { alert('Selecione o produto e informe a quantidade!'); return; }
+  if (tipo === 'entrada' && !temPermissao('darEntrada')) {
+    showToast('⛔ Você não tem permissão para dar entrada no estoque!', 'error');
+    return;
+  }
   const prod = produtos.find(p => p.id === prodId); if (!prod) return;
   if (tipo === 'saida' && qty > prod.qty) { alert(`Estoque insuficiente!\nAtual: ${fmtQty(prod)} ${prod.unidade}`); return; }
   const novaQty = tipo === 'entrada' ? prod.qty + qty : Math.max(0, prod.qty - qty);
