@@ -472,7 +472,8 @@ function adaptProd(p) {
   return { id: p.id, nome: p.nome, categoria: p.categoria, setor: p.setor,
            tipo: p.tipo, unidade: p.unidade, qty: parseFloat(p.qty||0),
            min: parseFloat(p.min||0), custo: parseFloat(p.custo||0),
-           linkedFrom: p.linked_from };
+           linkedFrom: p.linked_from,
+           transferivel: p.transferivel !== false };  // default true
 }
 function adaptMov(m) {
   return { id: m.id, prodId: m.prod_id, setor: m.setor, tipo: m.tipo,
@@ -1346,6 +1347,19 @@ async function carregarDados() {
       </div>
       <div style="font-size:11px;color:var(--text-light);margin-top:4px">Preço pago por 1 <span id="prod-custo-hint">unidade/kg/L</span></div>
     </div>
+    <div class="form-group">
+      <label>↔️ Permitir Transferência entre Setores</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="radio" name="prod-transferivel" id="prod-transf-sim" value="sim" checked>
+          <span>✅ Sim, pode transferir</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="radio" name="prod-transferivel" id="prod-transf-nao" value="nao">
+          <span>🚫 Não transferível</span>
+        </label>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-produto')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarProduto()">Salvar Produto</button>
@@ -1399,6 +1413,19 @@ async function carregarDados() {
       <div style="position:relative">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:13px">R$</span>
         <input type="number" id="edit-custo" placeholder="0,00" min="0" step="0.01" style="padding-left:32px">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>↔️ Permitir Transferência entre Setores</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="radio" name="edit-transferivel" id="edit-transf-sim" value="sim">
+          <span>✅ Sim, pode transferir</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px">
+          <input type="radio" name="edit-transferivel" id="edit-transf-nao" value="nao">
+          <span>🚫 Não transferível</span>
+        </label>
       </div>
     </div>
     <div class="modal-actions">
@@ -1806,9 +1833,10 @@ function salvarProduto() {
   }
   const custo = parseFloat(document.getElementById('prod-custo').value) || 0;
 
+  const transferivel = document.querySelector('input[name="prod-transferivel"]:checked')?.value !== 'nao';
   sb.from('produtos').insert([{
     nome, categoria, setor: setorAtual, tipo: tipoAtual, unidade,
-    qty: qty||0, min: min||0, custo: custo||0, ativo: true
+    qty: qty||0, min: min||0, custo: custo||0, ativo: true, transferivel
   }]).select().single().then(async ({data, error}) => {
     if (error) return showToast(error.message, 'error');
     if (qty > 0) {
@@ -1836,6 +1864,12 @@ function editarProduto(id) {
   document.getElementById('edit-custo').value = p.custo || '';
   document.getElementById('edit-qty').step = p.tipo === 'peso' ? '0.001' : '1';
   document.getElementById('edit-min').step = p.tipo === 'peso' ? '0.001' : '1';
+  // Marcar transferível correto
+  if (p.transferivel === false) {
+    document.getElementById('edit-transf-nao').checked = true;
+  } else {
+    document.getElementById('edit-transf-sim').checked = true;
+  }
   openModal('modal-edit-produto');
 }
 
@@ -1859,9 +1893,11 @@ function atualizarProduto() {
       variacao_pct: variacao, usuario_id: usuarioLogado?.id
     }]);
   }
+  const transfEdit = document.querySelector('input[name="edit-transferivel"]:checked')?.value !== 'nao';
   sb.from('produtos').update({
     nome: p.nome, categoria: p.categoria, setor: p.setor,
     qty: p.qty, min: p.min, custo: custoNovo,
+    transferivel: transfEdit,
     atualizado_em: new Date().toISOString()
   }).eq('id', id).then(async ({error}) => {
     if (error) return showToast(error.message, 'error');
@@ -1918,7 +1954,7 @@ function salvarMovimentacao() {
   if (!prodId || qty <= 0) { alert('Selecione o produto e informe a quantidade!'); return; }
   const prod = produtos.find(p => p.id === prodId); if (!prod) return;
   if (tipo === 'saida' && qty > prod.qty) { alert(`Estoque insuficiente!\nAtual: ${fmtQty(prod)} ${prod.unidade}`); return; }
-  const novaQty = tipo === 'entrada' ? prod.qty + qty : prod.qty - qty;
+  const novaQty = tipo === 'entrada' ? prod.qty + qty : Math.max(0, prod.qty - qty);
   Promise.all([
     sb.from('produtos').update({qty: novaQty, atualizado_em: new Date().toISOString()}).eq('id', prodId),
     sb.from('movimentacoes').insert([{prod_id: prodId, setor: prod.setor, tipo, qty, obs: obs||null, usuario_id: usuarioLogado?.id}])
@@ -1972,6 +2008,10 @@ function salvarTransferencia() {
   const de = prod.setor;
 
   if (de === para) { alert('Origem e destino devem ser setores diferentes!'); return; }
+  if (prod.transferivel === false) {
+    showToast('🚫 Este produto não permite transferência entre setores!', 'error');
+    return;
+  }
   if (qty > prod.qty) { alert(`Estoque insuficiente!\nAtual no ${SETORES[de].nome}: ${fmtQty(prod)} ${prod.unidade}`); return; }
 
   // Deduz do setor origem
@@ -2020,7 +2060,7 @@ function salvarTransferencia() {
     .eq('categoria', prod.categoria).eq('unidade', prod.unidade)
     .eq('ativo', true).maybeSingle()
   .then(async ({data: destino}) => {
-    const novoQtyOrigem = prod.qty - qty;
+    const novoQtyOrigem = Math.max(0, prod.qty - qty);
     if (!destino) {
       // Cria produto no destino
       const {data: novo} = await sb.from('produtos').insert([{
@@ -2547,7 +2587,7 @@ function salvarDesperdicio() {
   if (prod.tipo === 'unidade') prod.qty = Math.round(prod.qty);
   const d = { id: Date.now(), prodId, prodNome: prod.nome, setor: prod.setor, tipo: prod.tipo, unidade: prod.unidade, qty, causa, obs, data: new Date().toISOString() };
   Promise.all([
-    sb.from('produtos').update({qty: prod.qty - qty, atualizado_em: new Date().toISOString()}).eq('id', prodId),
+    sb.from('produtos').update({qty: Math.max(0, prod.qty - qty), atualizado_em: new Date().toISOString()}).eq('id', prodId),
     sb.from('desperdicios').insert([{prod_id: prodId, prod_nome: prod.nome, setor: prod.setor,
       tipo: prod.tipo, unidade: prod.unidade, qty, custo_unit: prod.custo||0, causa, obs: obs||null, usuario_id: usuarioLogado?.id}]),
     sb.from('movimentacoes').insert([{prod_id: prodId, setor: prod.setor, tipo:'saida', qty,
