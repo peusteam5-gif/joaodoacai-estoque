@@ -2589,6 +2589,7 @@ function renderSetor(s) {
             <td style="font-weight:600;color:var(--verde)">${val>0?fmtBRL(val):'—'}</td>
             <td><span class="badge ${status.badge}">${status.label}</span></td>
             <td><div style="display:flex;gap:5px">
+              ${['deposito','cozinha'].includes(p.setor) ? `<button class="btn btn-transfer btn-sm" title="Transferir produto" onclick="transferenciaRapida(${p.id})">↔️</button>` : ''}
               <button class="btn btn-outline btn-sm" onclick="editarProduto(${p.id})">✏️</button>
               <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️</button>
             </div></td>
@@ -3802,6 +3803,18 @@ const _origOpenModalMassa = window._openModal || (id => {});
 })();
 // ============================================================
 
+
+
+// Transferência rápida — abre modal já com produto selecionado
+function transferenciaRapida(prodId) {
+  const si = document.getElementById('search-transf');
+  if (si) si.value = '';
+  populateMovSel('transf-produto', prodId);
+  // Disparar onchange para atualizar destinos
+  document.getElementById('transf-produto').value = prodId;
+  onTransfProdChange();
+  openModal('modal-transfer');
+}
 
 // ======== FIM BACKUP ========
 </script>
