@@ -743,7 +743,7 @@ async function carregarDados() {
       <span class="icon">👨‍🍳</span> Cozinha
       <span class="setor-dot" style="background:var(--cozinha);margin-left:auto"></span>
     </button>
-    <button class="nav-item" onclick="showSetor('deposito')">
+    <button class="nav-item" id="nav-deposito" onclick="showSetor('deposito')">
       <span class="icon">🏭</span> Estoque/Depósito
       <span class="setor-dot" style="background:var(--deposito);margin-left:auto"></span>
     </button>
@@ -1760,9 +1760,9 @@ const NIVEIS = {
 
 // Permissões padrão por perfil (usadas ao selecionar perfil base)
 const PERMS_PADRAO = {
-  admin:   { excluirProduto:true,  cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:true,  verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:true  },
-  gerente: { excluirProduto:false, cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:false, verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:true  },
-  operador:{ excluirProduto:false, cadastrarProduto:false, editarProduto:false, gerenciarUsuarios:false, verRelatorios:false, verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:false }
+  admin:   { excluirProduto:true,  cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:true,  verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:true,  acessarDeposito:true  },
+  gerente: { excluirProduto:false, cadastrarProduto:true,  editarProduto:true,  gerenciarUsuarios:false, verRelatorios:true,  verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:false, acessarDeposito:false },
+  operador:{ excluirProduto:false, cadastrarProduto:false, editarProduto:false, gerenciarUsuarios:false, verRelatorios:false, verDesperdicio:true,  fazerTransferencia:true,  fazerMovimentacao:true,  darEntrada:false, acessarDeposito:false }
 };
 
 // Compatibilidade: PERMS agora aponta para PERMS_PADRAO
@@ -1821,6 +1821,7 @@ async function fazerLogin() {
   };
 
   document.getElementById('login-screen').classList.add('hidden');
+  atualizarNavPorPermissao();
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
   aplicarPermissoes();
@@ -2290,6 +2291,11 @@ function salvarMovimentacao() {
     showToast('⛔ Você não tem permissão para dar entrada no estoque!', 'error');
     return;
   }
+  const prod = produtos.find(p => p.id === prodId);
+  if (prod && prod.setor === 'deposito' && !temPermissao('acessarDeposito')) {
+    showToast('⛔ No Depósito você só pode fazer transferências!', 'error');
+    return;
+  }
   const prod = produtos.find(p => p.id === prodId); if (!prod) return;
   if (tipo === 'saida' && qty > prod.qty) { alert(`Estoque insuficiente!\nAtual: ${fmtQty(prod)} ${prod.unidade}`); return; }
   const novaQty = tipo === 'entrada' ? prod.qty + qty : Math.max(0, prod.qty - qty);
@@ -2386,6 +2392,11 @@ function salvarTransferencia() {
   if (de === para) { alert('Origem e destino devem ser setores diferentes!'); return; }
   if (prod.transferivel === false) {
     showToast('🚫 Este produto não permite transferência entre setores!', 'error');
+    return;
+  }
+  // Bloquear se origem for depósito e não for admin
+  if (de === 'deposito' && !temPermissao('acessarDeposito')) {
+    showToast('⛔ Apenas o Administrador pode transferir do Depósito!', 'error');
     return;
   }
   // Regras de fluxo de transferência
@@ -2585,7 +2596,7 @@ function renderSetor(s) {
       <div class="table-header">
         <h2>Produtos — ${st.emoji} ${st.nome}</h2>
         <div class="table-header-right">
-          <button class="btn btn-outline btn-sm" onclick="openModalMovSetor('${s}')">+ Movimentação</button>
+          ${s !== 'deposito' || temPermissao('acessarDeposito') ? `<button class="btn btn-outline btn-sm" onclick="openModalMovSetor('${s}')">+ Movimentação</button>` : ''}
           ${s !== 'buffet' ? `<button class="btn btn-transfer btn-sm" onclick="openModalTransfSetor('${s}')">↔️ Transferir</button>` : ''}
         </div>
       </div>
@@ -2606,8 +2617,8 @@ function renderSetor(s) {
             <td><span class="badge ${status.badge}">${status.label}</span></td>
             <td><div style="display:flex;gap:5px">
               ${['deposito','cozinha'].includes(p.setor) ? `<button class="btn btn-transfer btn-sm" title="Transferir produto" onclick="transferenciaRapida(${p.id})">↔️</button>` : ''}
-              <button class="btn btn-outline btn-sm" onclick="editarProduto(${p.id})">✏️</button>
-              <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️</button>
+              ${p.setor !== 'deposito' || temPermissao('acessarDeposito') ? `<button class="btn btn-outline btn-sm" onclick="editarProduto(${p.id})">✏️</button>` : ''}
+              ${p.setor !== 'deposito' || temPermissao('acessarDeposito') ? `<button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️</button>` : ''}
             </div></td>
           </tr>`;
         }).join('')}</tbody>
@@ -3329,6 +3340,7 @@ function renderAll() {
       senha:   ''
     };
     document.getElementById('login-screen').classList.add('hidden');
+  atualizarNavPorPermissao();
     aplicarPermissoes();
     await carregarDados();
   } else {
@@ -3849,6 +3861,12 @@ function aplicarRestricaoEntrada() {
     optEntrada.disabled = !podeEntrar;
   }
   if (!podeEntrar) selTipo.value = 'saida';
+}
+
+
+// Atualizar nav conforme permissões
+function atualizarNavPorPermissao() {
+  // Depósito sempre visível — restrições são por ação, não por acesso
 }
 
 // ======== FIM BACKUP ========
