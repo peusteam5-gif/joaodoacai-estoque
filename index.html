@@ -2020,16 +2020,7 @@ const _openModal = function(id) {
     const si = document.getElementById('search-mov');
     if(si) si.value='';
     populateMovSel('mov-produto');
-    // Ocultar opção Entrada se não tiver permissão
-    const selTipo = document.getElementById('mov-tipo');
-    if (selTipo) {
-      const optEntrada = selTipo.querySelector('option[value="entrada"]');
-      if (optEntrada) {
-        optEntrada.style.display = temPermissao('darEntrada') ? '' : 'none';
-        optEntrada.disabled = !temPermissao('darEntrada');
-      }
-      if (!temPermissao('darEntrada')) selTipo.value = 'saida';
-    }
+    aplicarRestricaoEntrada();
   }
   if (id === 'modal-transfer') {
     const si = document.getElementById('search-transf');
@@ -2627,6 +2618,7 @@ function renderSetor(s) {
 function openModalMovSetor(s) {
   populateMovSel('mov-produto');
   openModal('modal-mov');
+  aplicarRestricaoEntrada();
 }
 function openModalTransfSetor(s) {
   populateMovSel('transf-produto');
@@ -2732,7 +2724,7 @@ function renderAlertas() {
   }).join('');
 }
 
-function openRepor(prodId) { populateMovSel('mov-produto', prodId); onMovProdChange(); document.getElementById('mov-tipo').value='entrada'; openModal('modal-mov'); }
+function openRepor(prodId) { populateMovSel('mov-produto', prodId); onMovProdChange(); if(temPermissao('darEntrada')) document.getElementById('mov-tipo').value='entrada'; openModal('modal-mov'); aplicarRestricaoEntrada(); }
 function openTransfAlert(prodId) { populateMovSel('transf-produto', prodId); onTransfProdChange(); openModal('modal-transfer'); }
 
 // ---- RENDER PRODUTOS ----
@@ -3843,6 +3835,20 @@ function transferenciaRapida(prodId) {
       onTransfProdChange();
     }
   }, 50);
+}
+
+
+// Restrição de entrada no estoque
+function aplicarRestricaoEntrada() {
+  const selTipo = document.getElementById('mov-tipo');
+  if (!selTipo) return;
+  const podeEntrar = temPermissao('darEntrada');
+  const optEntrada = selTipo.querySelector('option[value="entrada"]');
+  if (optEntrada) {
+    optEntrada.style.display = podeEntrar ? '' : 'none';
+    optEntrada.disabled = !podeEntrar;
+  }
+  if (!podeEntrar) selTipo.value = 'saida';
 }
 
 // ======== FIM BACKUP ========
