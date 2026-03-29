@@ -502,6 +502,29 @@
   .massa-result.ok  { background:#EAFAF1;border:1px solid #A9DFBF;color:#1E8449; }
   .massa-result.err { background:#FEF2F2;border:1px solid #F1948A;color:#922B21; }
 
+
+  /* ===== CONTROLE DE VENDAS ===== */
+  .vendas-header { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px; }
+  .vendas-resumo { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px; }
+  .vendas-card   { background:white;border-radius:14px;padding:18px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);border:1px solid var(--border); }
+  .vendas-card .vc-label { font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px; }
+  .vendas-card .vc-value { font-size:26px;font-weight:800;font-family:'Syne',sans-serif;color:var(--text-main);margin:4px 0 2px; }
+  .vendas-card .vc-sub   { font-size:12px;color:var(--text-light); }
+  .vendas-table-wrap { background:white;border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06); }
+  .vendas-table-wrap table { width:100%;border-collapse:collapse; }
+  .vendas-table-wrap thead th { background:var(--creme);padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.7px;text-align:left;border-bottom:1px solid var(--border); }
+  .vendas-table-wrap tbody tr { border-bottom:1px solid #f0f0f0; }
+  .vendas-table-wrap tbody tr:last-child { border-bottom:none; }
+  .vendas-table-wrap tbody td { padding:10px 14px;font-size:13px;vertical-align:middle; }
+  .vendas-qty-input { width:90px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;text-align:right;transition:border-color .2s; }
+  .vendas-qty-input:focus { outline:none;border-color:var(--roxo-mid); }
+  .vendas-qty-input.tem-valor { border-color:var(--verde);background:#f0fdf4; }
+  .vendas-confirmar { background:linear-gradient(135deg,var(--acai),var(--roxo));color:white;border:none;border-radius:12px;padding:14px 32px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 14px rgba(74,26,110,0.3); }
+  .vendas-confirmar:hover { opacity:.9; }
+  .vendas-hist-row { display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5; }
+  .vendas-hist-row:last-child { border-bottom:none; }
+  @media(max-width:768px){ .vendas-resumo{grid-template-columns:1fr 1fr;} }
+
 </style>
 
 <!-- ====== SUPABASE ====== -->
@@ -739,20 +762,18 @@ async function carregarDados() {
       <span class="icon">🍨</span> Buffet
       <span class="setor-dot" style="background:var(--buffet);margin-left:auto"></span>
     </button>
-    <button class="nav-item" onclick="showSetor('cozinha')">
-      <span class="icon">👨‍🍳</span> Cozinha
-      <span class="setor-dot" style="background:var(--cozinha);margin-left:auto"></span>
-    </button>
+
     <button class="nav-item" id="nav-deposito" onclick="showSetor('deposito')">
       <span class="icon">🏭</span> Estoque/Depósito
       <span class="setor-dot" style="background:var(--deposito);margin-left:auto"></span>
     </button>
 
     <div class="nav-section" style="margin-top:8px">Cadastro</div>
-    <button class="nav-item" onclick="showSection('produtos')"><span class="icon">📦</span> Produtos</button>
+    <button class="nav-item" id="nav-produtos" onclick="showSection('produtos')"><span class="icon">📦</span> Produtos</button>
     <button class="nav-item" onclick="showSection('inventario')"><span class="icon">🔢</span> Inventário</button>
 
     <div class="nav-section" style="margin-top:8px">Dados</div>
+    <button class="nav-item" onclick="showSection('vendas')"><span class="icon">💰</span> Controle de Vendas</button>
     <button class="nav-item" onclick="showSection('backup')"><span class="icon">💾</span> Backup &amp; Dados</button>
   </nav>
   <div class="sidebar-footer">v5.2 — Inventário + Preços</div>
@@ -828,9 +849,7 @@ async function carregarDados() {
           <div class="value" id="stat-valor-buffet" style="color:var(--buffet);font-size:20px">R$ 0,00</div>
           <div class="sub">em estoque</div>
         </div>
-        <div class="card card-stat" style="border-left:4px solid var(--cozinha)">
-          <div class="label">👨‍🍳 Valor Cozinha</div>
-          <div class="value" id="stat-valor-cozinha" style="color:var(--cozinha);font-size:20px">R$ 0,00</div>
+
           <div class="sub">em estoque</div>
         </div>
         <div class="card card-stat" style="border-left:4px solid var(--deposito)">
@@ -853,7 +872,7 @@ async function carregarDados() {
           <div style="font-size:11px;color:var(--buffet);font-weight:600;margin-top:8px">💰 <span id="dash-buffet-valor">R$ 0,00</span></div>
           <button class="setor-card-btn">Ver Buffet →</button>
         </div>
-        <div class="setor-card cozinha" onclick="showSetor('cozinha')">
+        <div class="setor-card cozinha" onclick="showSetor('cozinha')" style="display:none">
           <div class="setor-card-head">
             <span class="setor-emoji">👨‍🍳</span>
             <div><h3>Cozinha</h3><p>Preparo e produção</p></div>
@@ -909,7 +928,7 @@ async function carregarDados() {
     </div>
 
     <!-- SETOR COZINHA -->
-    <div class="section" id="sec-cozinha">
+    <div class="section" id="sec-cozinha" style="display:none">
       <div class="setor-header">
         <div class="setor-icon-big" style="background:var(--cozinha-bg)">👨‍🍳</div>
         <div><h2>Cozinha</h2><p>Controle de estoque da área de produção</p></div>
@@ -948,7 +967,7 @@ async function carregarDados() {
         <span style="font-size:12px;color:var(--text-light);font-weight:500">Setor/Tipo:</span>
         <button class="filtro-btn active" onclick="setFiltroMov('todos',this)">Todos</button>
         <button class="filtro-btn f-buffet" onclick="setFiltroMov('buffet',this)">🍨 Buffet</button>
-        <button class="filtro-btn f-cozinha" onclick="setFiltroMov('cozinha',this)">👨‍🍳 Cozinha</button>
+
         <button class="filtro-btn f-deposito" onclick="setFiltroMov('deposito',this)">🏭 Depósito</button>
         <button class="filtro-btn" onclick="setFiltroMov('entrada',this)">📥 Entradas</button>
         <button class="filtro-btn" onclick="setFiltroMov('saida',this)">📤 Saídas</button>
@@ -1040,8 +1059,7 @@ async function carregarDados() {
             <select id="consumo-filtro-setor" onchange="renderRelatorios()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--creme);color:var(--text-main);outline:none">
               <option value="">Todos os setores</option>
               <option value="buffet">🍨 Buffet</option>
-              <option value="cozinha">👨‍🍳 Cozinha</option>
-              <option value="deposito">🏭 Depósito</option>
+                            <option value="deposito">🏭 Depósito</option>
             </select>
           </div>
         </div>
@@ -1100,7 +1118,7 @@ async function carregarDados() {
       <div class="filtro-bar">
         <button class="filtro-btn active" onclick="setFiltroProd('todos',this)">Todos</button>
         <button class="filtro-btn f-buffet" onclick="setFiltroProd('buffet',this)">🍨 Buffet</button>
-        <button class="filtro-btn f-cozinha" onclick="setFiltroProd('cozinha',this)">👨‍🍳 Cozinha</button>
+
         <button class="filtro-btn f-deposito" onclick="setFiltroProd('deposito',this)">🏭 Depósito</button>
       </div>
       <div class="table-card">
@@ -1171,8 +1189,7 @@ async function carregarDados() {
             <select id="desp-filtro-setor" onchange="renderDesperdicio()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--creme);color:var(--text-main);outline:none">
               <option value="">Todos os setores</option>
               <option value="buffet">🍨 Buffet</option>
-              <option value="cozinha">👨‍🍳 Cozinha</option>
-              <option value="deposito">🏭 Depósito</option>
+                            <option value="deposito">🏭 Depósito</option>
             </select>
             <select id="desp-filtro-causa" onchange="renderDesperdicio()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--creme);color:var(--text-main);outline:none">
               <option value="">Todas as causas</option>
@@ -1219,8 +1236,7 @@ async function carregarDados() {
         <select id="inv-filtro-setor" onchange="renderInventario()" style="padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--creme);color:var(--text-main);outline:none">
           <option value="">Todos os setores</option>
           <option value="buffet">🍨 Buffet</option>
-          <option value="cozinha">👨‍🍳 Cozinha</option>
-          <option value="deposito">🏭 Depósito</option>
+                    <option value="deposito">🏭 Depósito</option>
         </select>
         <button class="btn btn-primary" onclick="iniciarInventario()">▶️ Iniciar Contagem</button>
         <button class="btn btn-green" id="btn-confirmar-inv" style="display:none" onclick="confirmarInventario()">✅ Confirmar Diferenças</button>
@@ -1275,6 +1291,102 @@ async function carregarDados() {
     </div>
 
     <!-- BACKUP & DADOS -->
+
+    <!-- ====== CONTROLE DE VENDAS ====== -->
+    <div class="section" id="sec-vendas">
+
+      <div class="vendas-header">
+        <div>
+          <h2 style="font-family:'Syne',sans-serif;font-size:20px;color:var(--text-main);margin-bottom:4px">💰 Controle de Vendas</h2>
+          <p style="font-size:13px;color:var(--text-light)">Registre o total vendido no dia — o estoque do Buffet é deduzido automaticamente.</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="date" id="vendas-data" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px">
+          <button class="btn btn-outline" onclick="renderVendas()">🔄 Atualizar</button>
+          <button class="btn btn-outline" onclick="zerarVendas()">🧹 Limpar</button>
+        </div>
+      </div>
+
+      <!-- Cards resumo -->
+      <div class="vendas-resumo">
+        <div class="vendas-card">
+          <div class="vc-label">Produtos no Buffet</div>
+          <div class="vc-value" id="vnd-total-prod">—</div>
+          <div class="vc-sub">disponíveis para venda</div>
+        </div>
+        <div class="vendas-card">
+          <div class="vc-label">Itens registrados</div>
+          <div class="vc-value" id="vnd-qtd-prench" style="color:var(--roxo-mid)">0</div>
+          <div class="vc-sub">sabores com venda hoje</div>
+        </div>
+        <div class="vendas-card">
+          <div class="vc-label">Total vendido</div>
+          <div class="vc-value" id="vnd-total-kg" style="color:var(--verde)">0 kg</div>
+          <div class="vc-sub">em peso</div>
+        </div>
+        <div class="vendas-card" style="border-left:4px solid var(--roxo-mid)">
+          <div class="vc-label">Receita estimada</div>
+          <div class="vc-value" id="vnd-receita" style="color:var(--roxo-mid);font-size:20px">R$ —</div>
+          <div class="vc-sub">baseado no preço de venda</div>
+        </div>
+      </div>
+
+      <!-- Aviso -->
+      <div style="background:#EAFAF1;border:1px solid #A9DFBF;border-radius:12px;padding:14px 18px;font-size:13px;color:#1E8449;margin-bottom:20px;line-height:1.7">
+        💡 <strong>Como usar:</strong> No fim do dia informe a quantidade vendida (kg) de cada sabor de açaí. Clique em <strong>"Confirmar Vendas"</strong> — o sistema deduz automaticamente do estoque do Buffet e registra nas movimentações.
+      </div>
+
+      <!-- Tabela de açaís do buffet -->
+      <div class="vendas-table-wrap" style="margin-bottom:20px">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Estoque Buffet</th>
+              <th>Vendido hoje (kg)</th>
+              <th>Ficará</th>
+            </tr>
+          </thead>
+          <tbody id="vendas-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Preço de venda + obs + botão -->
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:600px">
+        <div class="form-row">
+          <div class="form-group">
+            <label>💵 Preço de venda (R$/kg) <span style="font-size:11px;color:var(--text-light)">— para calcular receita</span></label>
+            <input type="number" id="vendas-preco" placeholder="Ex: 45.00" min="0" step="0.01"
+              style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%"
+              oninput="atualizarCardsVendas()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>📝 Observação</label>
+          <input type="text" id="vendas-obs" placeholder="Ex: Vendas do almoço — sábado 29/03"
+            style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+        </div>
+        <div>
+          <button class="vendas-confirmar" onclick="confirmarVendas()">✅ Confirmar Vendas do Dia</button>
+        </div>
+      </div>
+
+      <!-- Histórico de vendas -->
+      <div style="margin-top:32px">
+        <h3 style="font-family:'Syne',sans-serif;font-size:16px;color:var(--text-main);margin-bottom:14px">📋 Histórico de Vendas</h3>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Data</th><th>Produto</th><th>Quantidade</th><th>Receita Est.</th><th>Obs</th></tr></thead>
+            <tbody id="vendas-hist-tbody"></tbody>
+          </table>
+          <div class="empty" id="vendas-hist-empty" style="display:none">
+            <div class="icon">💰</div><p>Nenhuma venda registrada ainda.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
     <div class="section" id="sec-backup">
       <div style="margin-bottom:24px">
         <h2 style="font-family:'Syne',sans-serif;font-size:18px;color:var(--text-main);margin-bottom:4px">💾 Backup &amp; Proteção de Dados</h2>
@@ -1389,7 +1501,7 @@ async function carregarDados() {
         📌 <strong>Formato do arquivo CSV:</strong><br>
         A primeira linha deve ser o cabeçalho com as colunas na ordem:<br>
         <code style="background:white;padding:2px 6px;border-radius:4px;font-size:12px">nome, categoria, setor, tipo, unidade, qty, min, custo</code><br>
-        <strong>setor:</strong> buffet / cozinha / deposito &nbsp;|&nbsp;
+        <strong>setor:</strong> buffet / deposito &nbsp;|&nbsp;
         <strong>tipo:</strong> peso / unidade<br>
         <a id="massa-download-modelo" href="#" onclick="massaDownloadModelo(event)"
            style="color:var(--roxo-mid);font-weight:600">⬇️ Baixar modelo CSV</a>
@@ -1483,9 +1595,7 @@ async function carregarDados() {
         <button class="setor-select-btn" onclick="selectSetor('buffet')" id="ss-buffet">
           <span class="se">🍨</span><span class="sl">Buffet</span>
         </button>
-        <button class="setor-select-btn" onclick="selectSetor('cozinha')" id="ss-cozinha">
-          <span class="se">👨‍🍳</span><span class="sl">Cozinha</span>
-        </button>
+
         <button class="setor-select-btn" onclick="selectSetor('deposito')" id="ss-deposito">
           <span class="se">🏭</span><span class="sl">Depósito</span>
         </button>
@@ -1596,7 +1706,6 @@ async function carregarDados() {
       <label>Setor</label>
       <select id="edit-setor">
         <option value="buffet">🍨 Buffet</option>
-        <option value="cozinha">👨‍🍳 Cozinha</option>
         <option value="deposito">🏭 Depósito</option>
       </select>
     </div>
@@ -1711,8 +1820,7 @@ async function carregarDados() {
       <label>Destino</label>
       <select id="transf-para">
         <option value="deposito">🏭 Depósito</option>
-        <option value="cozinha">👨‍🍳 Cozinha</option>
-        <option value="buffet">🍨 Buffet</option>
+                <option value="buffet">🍨 Buffet</option>
       </select>
     </div>
     <div class="form-group">
@@ -1745,7 +1853,7 @@ async function carregarDados() {
 <script>
 const SETORES = {
   buffet:   { nome:'Buffet',           emoji:'🍨', cor:'var(--buffet)',   badge:'badge-buffet' },
-  cozinha:  { nome:'Cozinha',          emoji:'👨‍🍳', cor:'var(--cozinha)',  badge:'badge-cozinha' },
+
   deposito: { nome:'Estoque/Depósito', emoji:'🏭', cor:'var(--deposito)', badge:'badge-deposito' }
 };
 
@@ -2065,14 +2173,20 @@ function save() { /* dados salvos via Supabase */ }
 
 // ---- NAV ----
 const sectionTitles = {
-  dashboard:'Dashboard', buffet:'Buffet', cozinha:'Cozinha', deposito:'Estoque / Depósito',
+  dashboard:'Dashboard', buffet:'Buffet', deposito:'Estoque / Depósito',
   movimentacoes:'Movimentações', transferencias:'Transferências',
   alertas:'Alertas', relatorios:'Relatórios', produtos:'Produtos',
   inventario:'🔢 Inventário — Contagem Física',
-  desperdicio:'Controle de Desperdício', backup:'💾 Backup & Dados'
+  desperdicio:'Controle de Desperdício', vendas:'💰 Controle de Vendas', backup:'💾 Backup & Dados'
 };
 
 function showSection(id) {
+  // Bloquear seções restritas para não-admin
+  if (id === 'produtos' && !temPermissao('acessarDeposito')) {
+    showToast('⛔ Sem permissão para acessar esta página!', 'error');
+    return;
+  }
+  if (id === 'vendas') setTimeout(renderVendas, 50);
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
@@ -2098,7 +2212,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 let setorAtual = '';
 function selectSetor(s) {
   setorAtual = s;
-  ['buffet','cozinha','deposito'].forEach(x => {
+  ['buffet','deposito'].forEach(x => {
     const btn = document.getElementById('ss-' + x);
     btn.className = 'setor-select-btn' + (x === s ? ' sel-' + x : '');
   });
@@ -2132,7 +2246,7 @@ function abrirModalProduto() {
   tipoAtual = 'peso'; setorAtual = '';
   switchTipo('peso');
   selectSetor('');
-  ['buffet','cozinha','deposito'].forEach(x => {
+  ['buffet','deposito'].forEach(x => {
     document.getElementById('ss-' + x).className = 'setor-select-btn';
   });
   ['prod-nome','prod-qty-peso','prod-min-peso','prod-qty-un','prod-min-un','prod-custo'].forEach(id => {
@@ -2325,12 +2439,9 @@ function onTransfProdChange() {
     const st = SETORES[p.setor];
 
     // Regras de fluxo:
-    // Depósito → Cozinha ou Buffet
-    // Cozinha  → Buffet apenas
-    // Buffet   → nenhum
+        // Buffet   → nenhum
     const destinosPermitidos = {
-      deposito: ['cozinha','buffet'],
-      cozinha:  ['buffet'],
+      deposito: ['buffet'],
       buffet:   []
     };
     const permitidos = destinosPermitidos[p.setor] || [];
@@ -2359,8 +2470,7 @@ function onTransfProdChange() {
     box.style.display = 'none';
     // Restaurar select com todas as opções
     sel.innerHTML = `
-      <option value="cozinha">👨‍🍳 Cozinha</option>
-      <option value="buffet">🍨 Buffet</option>
+            <option value="buffet">🍨 Buffet</option>
       <option value="deposito">🏭 Depósito</option>`;
     sel.disabled = false;
     inp.disabled = false;
@@ -2400,14 +2510,13 @@ function salvarTransferencia() {
   }
   // Regras de fluxo de transferência
   const fluxoPermitido = {
-    deposito: ['cozinha','buffet'],
-    cozinha:  ['buffet'],
+    deposito: ['buffet'],
     buffet:   []
   };
   if (!(fluxoPermitido[de] || []).includes(para)) {
     const msgs = {
       buffet: '⛔ O Buffet não pode transferir produtos para outros setores.',
-      cozinha: '⛔ A Cozinha só pode transferir para o Buffet.',
+
     };
     showToast(msgs[de] || '⛔ Transferência não permitida neste sentido!', 'error');
     return;
@@ -2535,7 +2644,7 @@ function renderDashboard() {
   document.getElementById('stat-transf').textContent = transfHoje;
 
   // Valores financeiros por setor
-  const setores = ['buffet','cozinha','deposito'];
+  const setores = ['buffet','deposito'];
   setores.forEach(s => {
     const lista = produtos.filter(p=>p.setor===s);
     document.getElementById(`dash-${s}-total`).textContent = lista.length;
@@ -2615,7 +2724,7 @@ function renderSetor(s) {
             <td style="font-weight:600;color:var(--verde)">${val>0?fmtBRL(val):'—'}</td>
             <td><span class="badge ${status.badge}">${status.label}</span></td>
             <td><div style="display:flex;gap:5px">
-              ${['deposito','cozinha'].includes(p.setor) ? `<button class="btn btn-transfer btn-sm" title="Transferir produto" onclick="transferenciaRapida(${p.id})">↔️</button>` : ''}
+              ${p.setor === 'deposito' ? `<button class="btn btn-transfer btn-sm" title="Transferir produto" onclick="transferenciaRapida(${p.id})">↔️</button>` : ''}
               ${p.setor !== 'deposito' || temPermissao('acessarDeposito') ? `<button class="btn btn-outline btn-sm" onclick="editarProduto(${p.id})">✏️</button>` : ''}
               ${p.setor !== 'deposito' || temPermissao('acessarDeposito') ? `<button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️</button>` : ''}
             </div></td>
@@ -2641,7 +2750,7 @@ function renderMovimentacoes() {
 
   // Filtro setor/tipo
   if (filtroMovAtual !== 'todos') {
-    if (['buffet','cozinha','deposito'].includes(filtroMovAtual)) lista = lista.filter(m=>m.setor===filtroMovAtual);
+    if (['buffet','deposito'].includes(filtroMovAtual)) lista = lista.filter(m=>m.setor===filtroMovAtual);
     else lista = lista.filter(m=>m.tipo===filtroMovAtual);
   }
 
@@ -2773,11 +2882,11 @@ function renderProdutos() {
 
 // ---- RENDER RELATÓRIOS ----
 function renderRelatorios() {
-  const colors = { buffet:'var(--buffet)', cozinha:'var(--cozinha)', deposito:'var(--deposito)' };
+  const colors = { buffet:'var(--buffet)', deposito:'var(--deposito)' };
   const catColors = ['#9B59D6','#6B2FA0','#27AE60','#E67E22','#3498DB','#E74C3C','#F39C12','#1ABC9C'];
 
   // por setor (quantidade)
-  document.getElementById('chart-setor').innerHTML = ['buffet','cozinha','deposito'].map(s => {
+  document.getElementById('chart-setor').innerHTML = ['buffet','deposito'].map(s => {
     const n = produtos.filter(p=>p.setor===s).length;
     const tot = Math.max(produtos.length, 1);
     const st = SETORES[s];
@@ -2818,7 +2927,7 @@ function renderRelatorios() {
     : topT.map(([nome,qty],i)=>{ const p=produtos.find(p=>p.nome===nome); const q=p&&p.tipo==='peso'?parseFloat(qty).toFixed(2):parseInt(qty); return `<div class="top-item"><div class="top-item-left"><div class="top-num">${i+1}</div><span class="top-name">${nome}</span></div><span class="top-val">${q}</span></div>`; }).join('');
 
   // ---- GRÁFICO VALOR POR SETOR ----
-  const valSetores = ['buffet','cozinha','deposito'].map(s=>({
+  const valSetores = ['buffet','deposito'].map(s=>({
     s, val: produtos.filter(p=>p.setor===s).reduce((acc,p)=>acc+valorProduto(p),0)
   }));
   const maxVal = Math.max(1, ...valSetores.map(x=>x.val));
@@ -3302,7 +3411,7 @@ function registrarMudancaCusto() { /* inline em atualizarProduto */ }
 
 function renderAll() {
   renderDashboard();
-  ['buffet','cozinha','deposito'].forEach(s=>renderSetor(s));
+  ['buffet','deposito'].forEach(s=>renderSetor(s));
   renderMovimentacoes();
   renderTransferencias();
   renderAlertas();
@@ -3519,8 +3628,7 @@ function massaLinhaHTML(i) {
     <td><select class="mg-select" id="mg-setor-${i}">
           <option value="">Selecione...</option>
           <option value="buffet">🍨 Buffet</option>
-          <option value="cozinha">👨‍🍳 Cozinha</option>
-          <option value="deposito">🏭 Depósito</option></select></td>
+                    <option value="deposito">🏭 Depósito</option></select></td>
     <td><select class="mg-select" id="mg-tipo-${i}" onchange="massaAtualizaUnidade(${i})">
           <option value="unidade">📦 Un.</option>
           <option value="peso">⚖️ Peso</option></select></td>
@@ -3740,11 +3848,11 @@ function csvParseText(text) {
     const min   = parseFloat((colIdx.min >= 0 ? cols[colIdx.min] : '0')?.replace(',','.')) || 0;
     const custo = parseFloat((colIdx.custo >= 0 ? cols[colIdx.custo] : '0')?.replace(',','.')) || 0;
 
-    const setorVal = setor.includes('buf') ? 'buffet' : setor.includes('coz') ? 'cozinha' : setor.includes('dep') || setor.includes('est') ? 'deposito' : setor;
+    const setorVal = setor.includes('buf') ? 'buffet' : setor.includes('dep') || setor.includes('est') ? 'deposito' : setor;
     const tipoVal  = tipo.includes('pes') || tipo.includes('kg') || tipo.includes('g') ? 'peso' : 'unidade';
 
     if (!nome) { errosLinha.push(idx+2); return; }
-    if (!['buffet','cozinha','deposito'].includes(setorVal)) { errosLinha.push(idx+2); return; }
+    if (!['buffet','deposito'].includes(setorVal)) { errosLinha.push(idx+2); return; }
 
     dados.push({ nome, categoria: cat||'Outros', setor: setorVal, tipo: tipoVal, unidade: und||'un', qty, min, custo, _linha: idx+2 });
   });
@@ -3865,8 +3973,200 @@ function aplicarRestricaoEntrada() {
 
 // Atualizar nav conforme permissões
 function atualizarNavPorPermissao() {
-  // Depósito sempre visível — restrições são por ação, não por acesso
+  // Esconder aba Produtos para quem não tem acessarDeposito (admin)
+  const navProd = document.getElementById('nav-produtos');
+  if (navProd) navProd.style.display = temPermissao('acessarDeposito') ? '' : 'none';
 }
+
+
+// ============================================================
+// CONTROLE DE VENDAS
+// ============================================================
+
+function renderVendas() {
+  // Só açaís do Buffet
+  const acais = produtos.filter(p =>
+    p.setor === 'buffet' &&
+    (p.nome.toLowerCase().includes('acai') || p.nome.toLowerCase().includes('açaí') || p.nome.toLowerCase().includes('açai'))
+  );
+
+  document.getElementById('vnd-total-prod').textContent = acais.length;
+
+  const tbody = document.getElementById('vendas-tbody');
+  if (!tbody) return;
+
+  if (acais.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-light)">
+      Nenhum produto de açaí encontrado no Buffet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = acais.map((p, i) => {
+    const step = p.tipo === 'peso' ? '0.001' : '1';
+    return `<tr id="vnd-row-${i}">
+      <td>
+        <div style="font-weight:600;color:var(--text-main)">${p.nome}</div>
+        <div style="font-size:11px;color:var(--text-light)">${p.categoria}</div>
+      </td>
+      <td>
+        <strong>${fmtQty(p)} ${p.unidade}</strong>
+        <div class="estoque-bar" style="width:80px;margin-top:4px">
+          <div class="estoque-bar-fill" style="width:${Math.min(100,(p.qty/Math.max(p.min,1))*50)}%;background:var(--verde)"></div>
+        </div>
+      </td>
+      <td>
+        <input type="number" class="vendas-qty-input" id="vnd-qty-${i}"
+          data-prod-id="${p.id}" data-estoque="${p.qty}"
+          placeholder="0" min="0" step="${step}"
+          oninput="atualizarVndRow(${i}, ${p.qty})">
+      </td>
+      <td id="vnd-ficara-${i}" style="font-weight:600;color:var(--verde)">—</td>
+    </tr>`;
+  }).join('');
+
+  // Data padrão = hoje
+  const dataEl = document.getElementById('vendas-data');
+  if (dataEl && !dataEl.value) {
+    dataEl.value = new Date().toISOString().slice(0,10);
+  }
+
+  renderVendasHistorico();
+  atualizarCardsVendas();
+}
+
+function atualizarVndRow(i, estoqueAtual) {
+  const input  = document.getElementById('vnd-qty-' + i);
+  const ficara = document.getElementById('vnd-ficara-' + i);
+  if (!input || !ficara) return;
+  const val = parseFloat(input.value) || 0;
+  const resto = Math.max(0, estoqueAtual - val);
+  if (val > 0) {
+    input.classList.add('tem-valor');
+    ficara.innerHTML = resto <= 0
+      ? '<span class="tag-zerado">0 (zerado)</span>'
+      : `<span class="tag-ok">${resto.toFixed(3)} kg</span>`;
+  } else {
+    input.classList.remove('tem-valor');
+    ficara.textContent = '—';
+  }
+  atualizarCardsVendas();
+}
+
+function atualizarCardsVendas() {
+  const inputs = document.querySelectorAll('.vendas-qty-input');
+  let preenchidos = 0, totalKg = 0;
+  inputs.forEach(inp => {
+    const val = parseFloat(inp.value) || 0;
+    if (val > 0) { preenchidos++; totalKg += val; }
+  });
+  const preco = parseFloat(document.getElementById('vendas-preco')?.value) || 0;
+  document.getElementById('vnd-qtd-prench').textContent = preenchidos;
+  document.getElementById('vnd-total-kg').textContent   = totalKg > 0 ? totalKg.toFixed(3) + ' kg' : '0 kg';
+  document.getElementById('vnd-receita').textContent    = preco > 0 && totalKg > 0 ? fmtBRL(totalKg * preco) : 'R$ —';
+}
+
+function zerarVendas() {
+  document.querySelectorAll('.vendas-qty-input').forEach(inp => {
+    inp.value = '';
+    inp.classList.remove('tem-valor');
+  });
+  document.querySelectorAll('[id^="vnd-ficara-"]').forEach(el => el.textContent = '—');
+  const obs = document.getElementById('vendas-obs');
+  if (obs) obs.value = '';
+  atualizarCardsVendas();
+}
+
+async function confirmarVendas() {
+  const inputs  = document.querySelectorAll('.vendas-qty-input');
+  const obs     = document.getElementById('vendas-obs')?.value.trim();
+  const dataVal = document.getElementById('vendas-data')?.value || new Date().toISOString().slice(0,10);
+  const preco   = parseFloat(document.getElementById('vendas-preco')?.value) || 0;
+  const dataFmt = new Date(dataVal + 'T12:00:00').toLocaleDateString('pt-BR');
+
+  const vendas = [];
+  inputs.forEach(inp => {
+    const val = parseFloat(inp.value) || 0;
+    if (val <= 0) return;
+    const prodId = parseInt(inp.dataset.prodId);
+    const prod   = produtos.find(p => p.id === prodId);
+    if (prod) vendas.push({ prod, qty: val });
+  });
+
+  if (vendas.length === 0) {
+    showToast('Informe a quantidade vendida de pelo menos um produto!', 'error');
+    return;
+  }
+
+  if (!confirm(`Confirmar venda de ${vendas.length} produto(s) do dia ${dataFmt}?
+
+Esta ação deduz do estoque do Buffet.`)) return;
+
+  showToast('Registrando vendas…');
+
+  const obsTexto = obs ? `Venda do dia (${dataFmt}) — ${obs}` : `Venda do dia (${dataFmt})`;
+  let ok = 0, erros = 0;
+
+  for (const { prod, qty } of vendas) {
+    const novaQty = Math.max(0, prod.qty - qty);
+    try {
+      await sb.from('produtos').update({
+        qty: novaQty, atualizado_em: new Date().toISOString()
+      }).eq('id', prod.id);
+
+      await sb.from('movimentacoes').insert([{
+        prod_id: prod.id, setor: prod.setor,
+        tipo: 'saida', qty,
+        obs: obsTexto,
+        usuario_id: usuarioLogado?.id
+      }]);
+      ok++;
+    } catch(e) { erros++; }
+  }
+
+  if (erros > 0) {
+    showToast(`Registrado com ${erros} erro(s).`, 'error');
+  } else {
+    showToast(`✅ ${ok} venda(s) registrada(s) com sucesso!`);
+  }
+
+  await carregarDados();
+  zerarVendas();
+  renderVendas();
+}
+
+function renderVendasHistorico() {
+  const tbody = document.getElementById('vendas-hist-tbody');
+  const empty = document.getElementById('vendas-hist-empty');
+  if (!tbody) return;
+
+  // Filtrar movimentações do tipo saída com obs "Venda do dia"
+  const hist = movimentacoes
+    .filter(m => m.tipo === 'saida' && m.obs && m.obs.includes('Venda do dia'))
+    .slice(0, 50);
+
+  if (hist.length === 0) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  const preco = parseFloat(document.getElementById('vendas-preco')?.value) || 0;
+
+  tbody.innerHTML = hist.map(m => {
+    const prod = produtos.find(p => p.id === m.prodId) || {};
+    const data = new Date(m.data).toLocaleDateString('pt-BR');
+    const receita = preco > 0 ? fmtBRL(m.qty * preco) : '—';
+    return `<tr>
+      <td style="font-size:12px;color:var(--text-light)">${data}</td>
+      <td><strong>${prod.nome || m.obs}</strong></td>
+      <td>${m.qty} kg</td>
+      <td style="color:var(--verde);font-weight:600">${receita}</td>
+      <td style="font-size:12px;color:var(--text-light)">${m.obs || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+// ============================================================
 
 // ======== FIM BACKUP ========
 </script>
