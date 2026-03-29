@@ -525,6 +525,47 @@
   .vendas-hist-row:last-child { border-bottom:none; }
   @media(max-width:768px){ .vendas-resumo{grid-template-columns:1fr 1fr;} }
 
+
+  /* ===== ESPELHO DE ESTOQUE ===== */
+  .espelho-status { display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:20px;font-weight:600; }
+  .espelho-status.ok   { background:#EAFAF1;color:#1E8449; }
+  .espelho-status.diff { background:#FEF2F2;color:#C0392B; }
+  .espelho-status.zero { background:#FEF9E7;color:#7D6608; }
+  .diff-positivo { color:var(--verde);font-weight:600; }
+  .diff-negativo { color:var(--vermelho);font-weight:600; }
+
+
+  /* ===== VENDAS DO DIA ===== */
+  .vnd-grid-4 { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px; }
+  .vnd-grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px; }
+  .vnd-card   { background:white;border-radius:14px;padding:18px 20px;border:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06); }
+  .vnd-card .vl  { font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px; }
+  .vnd-card .vv  { font-size:24px;font-weight:800;font-family:'Syne',sans-serif;color:var(--text-main); }
+  .vnd-card .vs  { font-size:12px;color:var(--text-light);margin-top:2px; }
+  .vnd-form-card { background:white;border-radius:14px;padding:24px;border:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:24px; }
+  .vnd-form-card h3 { font-family:'Syne',sans-serif;font-size:15px;color:var(--text-main);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border); }
+  .vnd-input-big { width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;box-sizing:border-box;color:var(--text-main);transition:border-color .2s; }
+  .vnd-input-big:focus { outline:none;border-color:var(--roxo-mid); }
+  .vnd-input-sm  { width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;box-sizing:border-box;transition:border-color .2s; }
+  .vnd-input-sm:focus  { outline:none;border-color:var(--roxo-mid); }
+  .vnd-select    { width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;background:white;cursor:pointer; }
+  .vnd-btn-salvar { width:100%;padding:14px;background:linear-gradient(135deg,var(--acai),var(--roxo));color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(74,26,110,0.3);transition:opacity .2s;margin-top:8px; }
+  .vnd-btn-salvar:hover { opacity:.9; }
+  .vnd-meta-bar { height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:6px; }
+  .vnd-meta-fill { height:100%;border-radius:4px;transition:width .4s;background:var(--roxo-mid); }
+  .vnd-hist-table { width:100%;border-collapse:collapse;font-size:13px; }
+  .vnd-hist-table thead th { background:var(--creme);padding:9px 12px;font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left; }
+  .vnd-hist-table tbody tr { border-bottom:1px solid #f0f0f0; }
+  .vnd-hist-table tbody td { padding:10px 12px; }
+  .vnd-chart-bar { display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:8px; }
+  .vnd-bar-wrap  { flex:1;display:flex;flex-direction:column;align-items:center;gap:4px; }
+  .vnd-bar       { width:100%;border-radius:6px 6px 0 0;background:var(--roxo-mid);min-height:4px;transition:height .4s; }
+  .vnd-bar-label { font-size:10px;color:var(--text-light);text-align:center; }
+  .vnd-bar-val   { font-size:10px;font-weight:600;color:var(--text-main);text-align:center; }
+  .pagto-btn     { flex:1;padding:8px 4px;border:1.5px solid var(--border);border-radius:8px;background:white;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--text-light);transition:all .2s;text-align:center; }
+  .pagto-btn.sel { border-color:var(--roxo-mid);background:#F4ECF7;color:var(--roxo-mid);font-weight:700; }
+  @media(max-width:768px){ .vnd-grid-4{grid-template-columns:1fr 1fr;} .vnd-grid-2{grid-template-columns:1fr;} }
+
 </style>
 
 <!-- ====== SUPABASE ====== -->
@@ -1295,91 +1336,160 @@ async function carregarDados() {
     <!-- ====== CONTROLE DE VENDAS ====== -->
     <div class="section" id="sec-vendas">
 
-      <div class="vendas-header">
+      <!-- Cabeçalho -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
         <div>
           <h2 style="font-family:'Syne',sans-serif;font-size:20px;color:var(--text-main);margin-bottom:4px">💰 Controle de Vendas</h2>
-          <p style="font-size:13px;color:var(--text-light)">Registre o total vendido no dia — o estoque do Buffet é deduzido automaticamente.</p>
+          <p style="font-size:13px;color:var(--text-light)">Registro diário de vendas, metas e análise de desempenho</p>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input type="date" id="vendas-data" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px">
-          <button class="btn btn-outline" onclick="renderVendas()">🔄 Atualizar</button>
-          <button class="btn btn-outline" onclick="zerarVendas()">🧹 Limpar</button>
-        </div>
-      </div>
-
-      <!-- Cards resumo -->
-      <div class="vendas-resumo">
-        <div class="vendas-card">
-          <div class="vc-label">Produtos no Buffet</div>
-          <div class="vc-value" id="vnd-total-prod">—</div>
-          <div class="vc-sub">disponíveis para venda</div>
-        </div>
-        <div class="vendas-card">
-          <div class="vc-label">Itens registrados</div>
-          <div class="vc-value" id="vnd-qtd-prench" style="color:var(--roxo-mid)">0</div>
-          <div class="vc-sub">sabores com venda hoje</div>
-        </div>
-        <div class="vendas-card">
-          <div class="vc-label">Total vendido</div>
-          <div class="vc-value" id="vnd-total-kg" style="color:var(--verde)">0 kg</div>
-          <div class="vc-sub">em peso</div>
-        </div>
-        <div class="vendas-card" style="border-left:4px solid var(--roxo-mid)">
-          <div class="vc-label">Receita estimada</div>
-          <div class="vc-value" id="vnd-receita" style="color:var(--roxo-mid);font-size:20px">R$ —</div>
-          <div class="vc-sub">baseado no preço de venda</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="vndVerHistorico()">📋 Histórico</button>
+          <button class="btn btn-outline btn-sm" onclick="vndVerGrafico()">📊 Gráfico</button>
         </div>
       </div>
 
-      <!-- Aviso -->
-      <div style="background:#EAFAF1;border:1px solid #A9DFBF;border-radius:12px;padding:14px 18px;font-size:13px;color:#1E8449;margin-bottom:20px;line-height:1.7">
-        💡 <strong>Como usar:</strong> No fim do dia informe a quantidade vendida (kg) de cada sabor de açaí. Clique em <strong>"Confirmar Vendas"</strong> — o sistema deduz automaticamente do estoque do Buffet e registra nas movimentações.
+      <!-- Cards resumo do mês -->
+      <div class="vnd-grid-4">
+        <div class="vnd-card" style="border-left:4px solid var(--roxo-mid)">
+          <div class="vl">Faturamento hoje</div>
+          <div class="vv" id="vnd-fat-hoje" style="color:var(--roxo-mid)">R$ —</div>
+          <div class="vs">ainda não registrado</div>
+        </div>
+        <div class="vnd-card" style="border-left:4px solid var(--verde)">
+          <div class="vl">Faturamento mês</div>
+          <div class="vv" id="vnd-fat-mes" style="color:var(--verde)">R$ —</div>
+          <div class="vs" id="vnd-mes-label">—</div>
+        </div>
+        <div class="vnd-card">
+          <div class="vl">Ticket médio (mês)</div>
+          <div class="vv" id="vnd-ticket-medio">—</div>
+          <div class="vs">por kg vendido</div>
+        </div>
+        <div class="vnd-card">
+          <div class="vl">Kg vendidos (mês)</div>
+          <div class="vv" id="vnd-kg-mes">— kg</div>
+          <div class="vs" id="vnd-dias-label">— dias registrados</div>
+        </div>
       </div>
 
-      <!-- Tabela de açaís do buffet -->
-      <div class="vendas-table-wrap" style="margin-bottom:20px">
-        <table>
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Estoque Buffet</th>
-              <th>Vendido hoje (kg)</th>
-              <th>Ficará</th>
-            </tr>
-          </thead>
-          <tbody id="vendas-tbody"></tbody>
-        </table>
-      </div>
-
-      <!-- Preço de venda + obs + botão -->
-      <div style="display:flex;flex-direction:column;gap:14px;max-width:600px">
-        <div class="form-row">
-          <div class="form-group">
-            <label>💵 Preço de venda (R$/kg) <span style="font-size:11px;color:var(--text-light)">— para calcular receita</span></label>
-            <input type="number" id="vendas-preco" placeholder="Ex: 45.00" min="0" step="0.01"
-              style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%"
-              oninput="atualizarCardsVendas()">
+      <!-- Meta do dia -->
+      <div class="vnd-card" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="vl">🎯 Meta diária</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--text-light)">Meta: R$</span>
+            <input type="number" id="vnd-meta" placeholder="0,00" min="0" step="10"
+              style="width:100px;padding:4px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600"
+              oninput="vndAtualizarMeta()" onchange="vndSalvarMeta()">
           </div>
         </div>
-        <div class="form-group">
-          <label>📝 Observação</label>
-          <input type="text" id="vendas-obs" placeholder="Ex: Vendas do almoço — sábado 29/03"
-            style="padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
-        </div>
-        <div>
-          <button class="vendas-confirmar" onclick="confirmarVendas()">✅ Confirmar Vendas do Dia</button>
+        <div class="vnd-meta-bar"><div class="vnd-meta-fill" id="vnd-meta-fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="font-size:12px;color:var(--text-light)" id="vnd-meta-pct">0% da meta atingida hoje</span>
+          <span style="font-size:12px;color:var(--text-light)" id="vnd-meta-falta">—</span>
         </div>
       </div>
 
-      <!-- Histórico de vendas -->
-      <div style="margin-top:32px">
+      <div class="vnd-grid-2">
+
+        <!-- Formulário de registro -->
+        <div class="vnd-form-card">
+          <h3>📝 Registrar Venda do Dia</h3>
+
+          <div class="form-group">
+            <label>📅 Data</label>
+            <input type="date" id="vnd-data" class="vnd-input-sm">
+          </div>
+
+          <div class="form-group">
+            <label>⚖️ Total vendido (kg)</label>
+            <input type="number" id="vnd-kg" placeholder="Ex: 12.500" min="0" step="0.001" class="vnd-input-big" oninput="vndAtualizar()">
+          </div>
+
+          <div class="form-group">
+            <label>💵 Preço médio (R$/kg)</label>
+            <input type="number" id="vnd-preco-kg" placeholder="Ex: 45.00" min="0" step="0.01" class="vnd-input-sm" oninput="vndAtualizar()">
+          </div>
+
+          <div class="form-group">
+            <label>💰 Faturamento total (R$)</label>
+            <input type="number" id="vnd-faturamento" placeholder="Calculado automaticamente" min="0" step="0.01" class="vnd-input-sm" oninput="vndAtualizar()">
+            <div style="font-size:11px;color:var(--text-light);margin-top:3px">Você pode digitar direto ou deixar calcular pelo kg × preço</div>
+          </div>
+
+          <div class="form-group">
+            <label>👥 Nº de clientes</label>
+            <input type="number" id="vnd-clientes" placeholder="Ex: 87" min="0" step="1" class="vnd-input-sm" oninput="vndAtualizar()">
+          </div>
+
+          <div class="form-group">
+            <label>💳 Formas de pagamento</label>
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+              <button class="pagto-btn sel" id="pagto-dinheiro"  onclick="vndTogglePagto('dinheiro')">💵 Dinheiro</button>
+              <button class="pagto-btn"     id="pagto-pix"       onclick="vndTogglePagto('pix')">📱 Pix</button>
+              <button class="pagto-btn"     id="pagto-credito"   onclick="vndTogglePagto('credito')">💳 Crédito</button>
+              <button class="pagto-btn"     id="pagto-debito"    onclick="vndTogglePagto('debito')">💳 Débito</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>🗑️ Despesas do dia (R$) <span style="font-size:11px;color:var(--text-light)">opcional</span></label>
+            <input type="number" id="vnd-despesas" placeholder="Ex: 150.00" min="0" step="0.01" class="vnd-input-sm" oninput="vndAtualizar()">
+          </div>
+
+          <div class="form-group">
+            <label>📝 Observação</label>
+            <input type="text" id="vnd-obs" placeholder="Ex: Feriado, chuva, promoção..." class="vnd-input-sm">
+          </div>
+
+          <!-- Preview -->
+          <div id="vnd-preview" style="background:var(--creme);border-radius:10px;padding:12px 14px;margin-bottom:12px;display:none">
+            <div style="font-size:12px;font-weight:600;color:var(--text-main);margin-bottom:6px">📊 Resumo</div>
+            <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Faturamento</span><strong id="prev-fat">—</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Despesas</span><strong id="prev-desp" style="color:var(--vermelho)">—</strong></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:2px"><span style="color:var(--text-light)">Lucro estimado</span><strong id="prev-lucro" style="color:var(--verde)">—</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Ticket médio</span><strong id="prev-ticket">—</strong></div>
+            </div>
+          </div>
+
+          <button class="vnd-btn-salvar" onclick="vndSalvar()">💾 Salvar Venda</button>
+        </div>
+
+        <!-- Gráfico + resumo rápido -->
+        <div>
+          <div class="vnd-form-card" style="margin-bottom:16px">
+            <h3>📊 Últimos 7 dias — Faturamento</h3>
+            <div class="vnd-chart-bar" id="vnd-chart"></div>
+          </div>
+          <div class="vnd-form-card">
+            <h3>📈 Desempenho do mês</h3>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px" id="vnd-desempenho">
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Melhor dia</span><strong id="vnd-melhor-dia">—</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Média diária</span><strong id="vnd-media-dia">—</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Total clientes (mês)</span><strong id="vnd-total-clientes">—</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Lucro estimado (mês)</span><strong id="vnd-lucro-mes" style="color:var(--verde)">—</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Dias registrados</span><strong id="vnd-dias-reg">—</strong></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Histórico -->
+      <div id="vnd-historico-wrap">
         <h3 style="font-family:'Syne',sans-serif;font-size:16px;color:var(--text-main);margin-bottom:14px">📋 Histórico de Vendas</h3>
         <div class="table-card">
-          <table>
-            <thead><tr><th>Data</th><th>Produto</th><th>Quantidade</th><th>Receita Est.</th><th>Obs</th></tr></thead>
-            <tbody id="vendas-hist-tbody"></tbody>
+          <table class="vnd-hist-table">
+            <thead>
+              <tr>
+                <th>Data</th><th>kg</th><th>Preço/kg</th><th>Faturamento</th>
+                <th>Clientes</th><th>Ticket Médio</th><th>Despesas</th><th>Lucro</th><th>Pagamento</th><th>Obs</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="vnd-hist-tbody"></tbody>
           </table>
-          <div class="empty" id="vendas-hist-empty" style="display:none">
+          <div class="empty" id="vnd-hist-empty" style="display:none">
             <div class="icon">💰</div><p>Nenhuma venda registrada ainda.</p>
           </div>
         </div>
@@ -2186,7 +2296,7 @@ function showSection(id) {
     showToast('⛔ Sem permissão para acessar esta página!', 'error');
     return;
   }
-  if (id === 'vendas') setTimeout(renderVendas, 50);
+  if (id === 'vendas') { setTimeout(renderVendas, 50); }
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
@@ -3983,190 +4093,269 @@ function atualizarNavPorPermissao() {
 // CONTROLE DE VENDAS
 // ============================================================
 
-function renderVendas() {
-  // Só açaís do Buffet
-  const acais = produtos.filter(p =>
-    p.setor === 'buffet' &&
-    (p.nome.toLowerCase().includes('acai') || p.nome.toLowerCase().includes('açaí') || p.nome.toLowerCase().includes('açai'))
-  );
+const VND_KEY = 'joaodoacai_vendas';
+const VND_META_KEY = 'joaodoacai_meta_diaria';
 
-  document.getElementById('vnd-total-prod').textContent = acais.length;
-
-  const tbody = document.getElementById('vendas-tbody');
-  if (!tbody) return;
-
-  if (acais.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-light)">
-      Nenhum produto de açaí encontrado no Buffet.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = acais.map((p, i) => {
-    const step = p.tipo === 'peso' ? '0.001' : '1';
-    return `<tr id="vnd-row-${i}">
-      <td>
-        <div style="font-weight:600;color:var(--text-main)">${p.nome}</div>
-        <div style="font-size:11px;color:var(--text-light)">${p.categoria}</div>
-      </td>
-      <td>
-        <strong>${fmtQty(p)} ${p.unidade}</strong>
-        <div class="estoque-bar" style="width:80px;margin-top:4px">
-          <div class="estoque-bar-fill" style="width:${Math.min(100,(p.qty/Math.max(p.min,1))*50)}%;background:var(--verde)"></div>
-        </div>
-      </td>
-      <td>
-        <input type="number" class="vendas-qty-input" id="vnd-qty-${i}"
-          data-prod-id="${p.id}" data-estoque="${p.qty}"
-          placeholder="0" min="0" step="${step}"
-          oninput="atualizarVndRow(${i}, ${p.qty})">
-      </td>
-      <td id="vnd-ficara-${i}" style="font-weight:600;color:var(--verde)">—</td>
-    </tr>`;
-  }).join('');
-
-  // Data padrão = hoje
-  const dataEl = document.getElementById('vendas-data');
-  if (dataEl && !dataEl.value) {
-    dataEl.value = new Date().toISOString().slice(0,10);
-  }
-
-  renderVendasHistorico();
-  atualizarCardsVendas();
+// Carregar vendas do localStorage
+function vndCarregar() {
+  try { return JSON.parse(localStorage.getItem(VND_KEY) || '[]'); } catch { return []; }
+}
+function vndSalvarLocal(lista) {
+  localStorage.setItem(VND_KEY, JSON.stringify(lista));
 }
 
-function atualizarVndRow(i, estoqueAtual) {
-  const input  = document.getElementById('vnd-qty-' + i);
-  const ficara = document.getElementById('vnd-ficara-' + i);
-  if (!input || !ficara) return;
-  const val = parseFloat(input.value) || 0;
-  const resto = Math.max(0, estoqueAtual - val);
-  if (val > 0) {
-    input.classList.add('tem-valor');
-    ficara.innerHTML = resto <= 0
-      ? '<span class="tag-zerado">0 (zerado)</span>'
-      : `<span class="tag-ok">${resto.toFixed(3)} kg</span>`;
+let vndPagamentos = ['dinheiro'];
+
+function vndTogglePagto(p) {
+  if (vndPagamentos.includes(p)) {
+    if (vndPagamentos.length > 1) vndPagamentos = vndPagamentos.filter(x => x !== p);
   } else {
-    input.classList.remove('tem-valor');
-    ficara.textContent = '—';
+    vndPagamentos.push(p);
   }
-  atualizarCardsVendas();
+  ['dinheiro','pix','credito','debito'].forEach(x => {
+    const el = document.getElementById('pagto-' + x);
+    if (el) el.classList.toggle('sel', vndPagamentos.includes(x));
+  });
 }
 
-function atualizarCardsVendas() {
-  const inputs = document.querySelectorAll('.vendas-qty-input');
-  let preenchidos = 0, totalKg = 0;
-  inputs.forEach(inp => {
-    const val = parseFloat(inp.value) || 0;
-    if (val > 0) { preenchidos++; totalKg += val; }
-  });
-  const preco = parseFloat(document.getElementById('vendas-preco')?.value) || 0;
-  document.getElementById('vnd-qtd-prench').textContent = preenchidos;
-  document.getElementById('vnd-total-kg').textContent   = totalKg > 0 ? totalKg.toFixed(3) + ' kg' : '0 kg';
-  document.getElementById('vnd-receita').textContent    = preco > 0 && totalKg > 0 ? fmtBRL(totalKg * preco) : 'R$ —';
-}
+function vndAtualizar() {
+  const kg     = parseFloat(document.getElementById('vnd-kg')?.value) || 0;
+  const preco  = parseFloat(document.getElementById('vnd-preco-kg')?.value) || 0;
+  const clientes = parseInt(document.getElementById('vnd-clientes')?.value) || 0;
+  const despesas = parseFloat(document.getElementById('vnd-despesas')?.value) || 0;
 
-function zerarVendas() {
-  document.querySelectorAll('.vendas-qty-input').forEach(inp => {
-    inp.value = '';
-    inp.classList.remove('tem-valor');
-  });
-  document.querySelectorAll('[id^="vnd-ficara-"]').forEach(el => el.textContent = '—');
-  const obs = document.getElementById('vendas-obs');
-  if (obs) obs.value = '';
-  atualizarCardsVendas();
-}
-
-async function confirmarVendas() {
-  const inputs  = document.querySelectorAll('.vendas-qty-input');
-  const obs     = document.getElementById('vendas-obs')?.value.trim();
-  const dataVal = document.getElementById('vendas-data')?.value || new Date().toISOString().slice(0,10);
-  const preco   = parseFloat(document.getElementById('vendas-preco')?.value) || 0;
-  const dataFmt = new Date(dataVal + 'T12:00:00').toLocaleDateString('pt-BR');
-
-  const vendas = [];
-  inputs.forEach(inp => {
-    const val = parseFloat(inp.value) || 0;
-    if (val <= 0) return;
-    const prodId = parseInt(inp.dataset.prodId);
-    const prod   = produtos.find(p => p.id === prodId);
-    if (prod) vendas.push({ prod, qty: val });
-  });
-
-  if (vendas.length === 0) {
-    showToast('Informe a quantidade vendida de pelo menos um produto!', 'error');
-    return;
+  // Auto-calcular faturamento se não digitado manualmente
+  const fatInput = document.getElementById('vnd-faturamento');
+  let fat = parseFloat(fatInput?.value) || 0;
+  if (kg > 0 && preco > 0 && !fatInput?.dataset.manual) {
+    fat = kg * preco;
+    if (fatInput) { fatInput.value = fat.toFixed(2); }
   }
 
-  if (!confirm(`Confirmar venda de ${vendas.length} produto(s) do dia ${dataFmt}?
+  const lucro  = fat - despesas;
+  const ticket = clientes > 0 ? fat / clientes : kg > 0 && preco > 0 ? preco : 0;
 
-Esta ação deduz do estoque do Buffet.`)) return;
-
-  showToast('Registrando vendas…');
-
-  const obsTexto = obs ? `Venda do dia (${dataFmt}) — ${obs}` : `Venda do dia (${dataFmt})`;
-  let ok = 0, erros = 0;
-
-  for (const { prod, qty } of vendas) {
-    const novaQty = Math.max(0, prod.qty - qty);
-    try {
-      await sb.from('produtos').update({
-        qty: novaQty, atualizado_em: new Date().toISOString()
-      }).eq('id', prod.id);
-
-      await sb.from('movimentacoes').insert([{
-        prod_id: prod.id, setor: prod.setor,
-        tipo: 'saida', qty,
-        obs: obsTexto,
-        usuario_id: usuarioLogado?.id
-      }]);
-      ok++;
-    } catch(e) { erros++; }
-  }
-
-  if (erros > 0) {
-    showToast(`Registrado com ${erros} erro(s).`, 'error');
+  const prev = document.getElementById('vnd-preview');
+  if (fat > 0 || kg > 0) {
+    if (prev) prev.style.display = 'block';
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+    set('prev-fat',    fat > 0 ? fmtBRL(fat) : '—');
+    set('prev-desp',   despesas > 0 ? fmtBRL(despesas) : '—');
+    set('prev-lucro',  fat > 0 ? fmtBRL(lucro) : '—');
+    set('prev-ticket', ticket > 0 ? fmtBRL(ticket) : '—');
   } else {
-    showToast(`✅ ${ok} venda(s) registrada(s) com sucesso!`);
+    if (prev) prev.style.display = 'none';
   }
 
-  await carregarDados();
-  zerarVendas();
+  vndAtualizarMeta(fat);
+}
+
+function vndSalvar() {
+  const data     = document.getElementById('vnd-data')?.value;
+  const kg       = parseFloat(document.getElementById('vnd-kg')?.value) || 0;
+  const preco    = parseFloat(document.getElementById('vnd-preco-kg')?.value) || 0;
+  const fat      = parseFloat(document.getElementById('vnd-faturamento')?.value) || (kg * preco);
+  const clientes = parseInt(document.getElementById('vnd-clientes')?.value) || 0;
+  const despesas = parseFloat(document.getElementById('vnd-despesas')?.value) || 0;
+  const obs      = document.getElementById('vnd-obs')?.value.trim() || '';
+
+  if (!data) { showToast('Informe a data!', 'error'); return; }
+  if (kg <= 0 && fat <= 0) { showToast('Informe o kg vendido ou o faturamento!', 'error'); return; }
+
+  const lista = vndCarregar();
+
+  // Verificar se já tem registro do dia
+  const idx = lista.findIndex(v => v.data === data);
+  const registro = {
+    data, kg, preco, faturamento: fat,
+    clientes, despesas,
+    lucro: fat - despesas,
+    ticket: clientes > 0 ? fat / clientes : preco || 0,
+    pagamentos: [...vndPagamentos],
+    obs,
+    criadoEm: new Date().toISOString(),
+    usuario: usuarioLogado?.nome || ''
+  };
+
+  if (idx >= 0) {
+    if (!confirm('Já existe um registro para este dia. Deseja substituir?')) return;
+    lista[idx] = registro;
+  } else {
+    lista.unshift(registro);
+  }
+
+  vndSalvarLocal(lista);
+  showToast('✅ Venda salva com sucesso!');
+  vndLimparForm();
   renderVendas();
 }
 
-function renderVendasHistorico() {
-  const tbody = document.getElementById('vendas-hist-tbody');
-  const empty = document.getElementById('vendas-hist-empty');
+function vndLimparForm() {
+  ['vnd-kg','vnd-preco-kg','vnd-faturamento','vnd-clientes','vnd-despesas','vnd-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; delete el.dataset.manual; }
+  });
+  vndPagamentos = ['dinheiro'];
+  ['dinheiro','pix','credito','debito'].forEach(x => {
+    const el = document.getElementById('pagto-' + x);
+    if (el) el.classList.toggle('sel', x === 'dinheiro');
+  });
+  const prev = document.getElementById('vnd-preview');
+  if (prev) prev.style.display = 'none';
+}
+
+function vndExcluir(data) {
+  if (!confirm('Excluir o registro de ' + new Date(data + 'T12:00:00').toLocaleDateString('pt-BR') + '?')) return;
+  const lista = vndCarregar().filter(v => v.data !== data);
+  vndSalvarLocal(lista);
+  renderVendas();
+  showToast('Registro excluído!');
+}
+
+function vndAtualizarMeta(fatHoje) {
+  const meta = parseFloat(localStorage.getItem(VND_META_KEY)) || 0;
+  const metaInput = document.getElementById('vnd-meta');
+  if (metaInput && !metaInput.value && meta > 0) metaInput.value = meta.toFixed(2);
+
+  if (!fatHoje) {
+    const hoje = new Date().toISOString().slice(0,10);
+    const lista = vndCarregar();
+    const reg = lista.find(v => v.data === hoje);
+    fatHoje = reg?.faturamento || 0;
+  }
+
+  const pct = meta > 0 ? Math.min(100, (fatHoje / meta) * 100) : 0;
+  const fill = document.getElementById('vnd-meta-fill');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.style.background = pct >= 100 ? 'var(--verde)' : pct >= 70 ? 'var(--roxo-mid)' : 'var(--vermelho)';
+  }
+  const pctEl = document.getElementById('vnd-meta-pct');
+  const faltaEl = document.getElementById('vnd-meta-falta');
+  if (pctEl) pctEl.textContent = pct.toFixed(0) + '% da meta atingida hoje';
+  if (faltaEl) faltaEl.textContent = meta > 0 && fatHoje < meta
+    ? 'Faltam ' + fmtBRL(meta - fatHoje) : pct >= 100 ? '🎉 Meta batida!' : '';
+}
+
+function vndSalvarMeta() {
+  const val = parseFloat(document.getElementById('vnd-meta')?.value) || 0;
+  localStorage.setItem(VND_META_KEY, val);
+  vndAtualizarMeta();
+}
+
+function renderVendas() {
+  const lista   = vndCarregar();
+  const hoje    = new Date().toISOString().slice(0,10);
+  const mesAtual = hoje.slice(0,7);
+
+  // Data padrão
+  const dataEl = document.getElementById('vnd-data');
+  if (dataEl && !dataEl.value) dataEl.value = hoje;
+
+  // Vendas do mês atual
+  const doMes = lista.filter(v => v.data.startsWith(mesAtual));
+
+  const fatMes     = doMes.reduce((a,v) => a + (v.faturamento||0), 0);
+  const kgMes      = doMes.reduce((a,v) => a + (v.kg||0), 0);
+  const lucroMes   = doMes.reduce((a,v) => a + (v.lucro||0), 0);
+  const clientesMes= doMes.reduce((a,v) => a + (v.clientes||0), 0);
+  const mediaFat   = doMes.length > 0 ? fatMes / doMes.length : 0;
+  const melhor     = doMes.reduce((a,v) => (v.faturamento||0) > (a.faturamento||0) ? v : a, {});
+  const ticketMed  = kgMes > 0 ? fatMes / kgMes : 0;
+
+  // Hoje
+  const regHoje = lista.find(v => v.data === hoje);
+  const fatHoje = regHoje?.faturamento || 0;
+
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const mesNome = new Date(mesAtual + '-01').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+  set('vnd-fat-hoje',       fatHoje > 0 ? fmtBRL(fatHoje) : 'R$ —');
+  set('vnd-fat-mes',        fatMes > 0 ? fmtBRL(fatMes) : 'R$ —');
+  set('vnd-mes-label',      mesNome);
+  set('vnd-ticket-medio',   ticketMed > 0 ? fmtBRL(ticketMed) + '/kg' : '—');
+  set('vnd-kg-mes',         kgMes > 0 ? kgMes.toFixed(3) + ' kg' : '— kg');
+  set('vnd-dias-label',     doMes.length + ' dias registrados');
+  set('vnd-melhor-dia',     melhor.data ? new Date(melhor.data+'T12:00:00').toLocaleDateString('pt-BR') + ' — ' + fmtBRL(melhor.faturamento) : '—');
+  set('vnd-media-dia',      mediaFat > 0 ? fmtBRL(mediaFat) : '—');
+  set('vnd-total-clientes', clientesMes > 0 ? clientesMes + ' clientes' : '—');
+  set('vnd-lucro-mes',      lucroMes !== 0 ? fmtBRL(lucroMes) : '—');
+  set('vnd-dias-reg',       doMes.length + ' dias');
+
+  vndAtualizarMeta(fatHoje);
+  vndRenderGrafico(lista);
+  vndRenderHistorico(lista);
+}
+
+function vndRenderGrafico(lista) {
+  const chart = document.getElementById('vnd-chart');
+  if (!chart) return;
+
+  // Últimos 7 dias
+  const dias = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    dias.push(d.toISOString().slice(0,10));
+  }
+
+  const maxFat = Math.max(...dias.map(d => {
+    const v = lista.find(x => x.data === d);
+    return v?.faturamento || 0;
+  }), 1);
+
+  chart.innerHTML = dias.map(d => {
+    const v   = lista.find(x => x.data === d);
+    const fat = v?.faturamento || 0;
+    const pct = (fat / maxFat) * 100;
+    const label = new Date(d + 'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short'});
+    const hoje = d === new Date().toISOString().slice(0,10);
+    return `<div class="vnd-bar-wrap">
+      <div class="vnd-bar-val">${fat > 0 ? 'R$' + (fat/1000).toFixed(1) + 'k' : ''}</div>
+      <div class="vnd-bar" style="height:${Math.max(pct,3)}%;background:${hoje ? 'var(--roxo-mid)' : 'var(--lilas)'}"></div>
+      <div class="vnd-bar-label">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+function vndRenderHistorico(lista) {
+  const tbody = document.getElementById('vnd-hist-tbody');
+  const empty = document.getElementById('vnd-hist-empty');
   if (!tbody) return;
 
-  // Filtrar movimentações do tipo saída com obs "Venda do dia"
-  const hist = movimentacoes
-    .filter(m => m.tipo === 'saida' && m.obs && m.obs.includes('Venda do dia'))
-    .slice(0, 50);
-
-  if (hist.length === 0) {
+  if (lista.length === 0) {
     tbody.innerHTML = '';
     if (empty) empty.style.display = 'block';
     return;
   }
   if (empty) empty.style.display = 'none';
 
-  const preco = parseFloat(document.getElementById('vendas-preco')?.value) || 0;
-
-  tbody.innerHTML = hist.map(m => {
-    const prod = produtos.find(p => p.id === m.prodId) || {};
-    const data = new Date(m.data).toLocaleDateString('pt-BR');
-    const receita = preco > 0 ? fmtBRL(m.qty * preco) : '—';
+  tbody.innerHTML = lista.slice(0, 60).map(v => {
+    const data    = new Date(v.data + 'T12:00:00').toLocaleDateString('pt-BR');
+    const pagtos  = (v.pagamentos || []).join(', ');
     return `<tr>
-      <td style="font-size:12px;color:var(--text-light)">${data}</td>
-      <td><strong>${prod.nome || m.obs}</strong></td>
-      <td>${m.qty} kg</td>
-      <td style="color:var(--verde);font-weight:600">${receita}</td>
-      <td style="font-size:12px;color:var(--text-light)">${m.obs || '—'}</td>
+      <td style="font-size:12px;color:var(--text-light);white-space:nowrap">${data}</td>
+      <td>${v.kg ? v.kg.toFixed(3) + ' kg' : '—'}</td>
+      <td>${v.preco ? fmtBRL(v.preco) : '—'}</td>
+      <td style="font-weight:700;color:var(--roxo-mid)">${v.faturamento ? fmtBRL(v.faturamento) : '—'}</td>
+      <td>${v.clientes || '—'}</td>
+      <td>${v.ticket ? fmtBRL(v.ticket) : '—'}</td>
+      <td style="color:var(--vermelho)">${v.despesas ? fmtBRL(v.despesas) : '—'}</td>
+      <td style="color:var(--verde);font-weight:600">${v.lucro ? fmtBRL(v.lucro) : '—'}</td>
+      <td style="font-size:12px">${pagtos}</td>
+      <td style="font-size:12px;color:var(--text-light);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.obs || '—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="vndExcluir('${v.data}')">🗑️</button></td>
     </tr>`;
   }).join('');
 }
-// ============================================================
+
+function vndVerHistorico() {
+  const el = document.getElementById('vnd-historico-wrap');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+function vndVerGrafico() {
+  const el = document.getElementById('vnd-chart');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
 
 // ======== FIM BACKUP ========
 </script>
