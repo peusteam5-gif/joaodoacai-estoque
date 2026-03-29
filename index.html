@@ -952,7 +952,7 @@ async function carregarDados() {
     </div>
 
     <!-- SETOR BUFFET -->
-    <div class="section" id="sec-buffet">
+    <div class="section" id="sec-buffet" style="display:none">
       <div class="setor-header">
         <div class="setor-icon-big" style="background:var(--buffet-bg)">🍨</div>
         <div><h2>Buffet</h2><p>Controle de estoque da área de atendimento</p></div>
@@ -986,7 +986,7 @@ async function carregarDados() {
     </div>
 
     <!-- SETOR DEPOSITO -->
-    <div class="section" id="sec-deposito">
+    <div class="section" id="sec-deposito" style="display:none">
       <div class="setor-header">
         <div class="setor-icon-big" style="background:var(--deposito-bg)">🏭</div>
         <div><h2>Estoque / Depósito</h2><p>Controle do armazenamento geral</p></div>
@@ -1003,7 +1003,7 @@ async function carregarDados() {
     </div>
 
     <!-- MOVIMENTAÇÕES -->
-    <div class="section" id="sec-movimentacoes">
+    <div class="section" id="sec-movimentacoes" style="display:none">
       <div class="filtro-bar" style="flex-wrap:wrap;gap:6px">
         <span style="font-size:12px;color:var(--text-light);font-weight:500">Setor/Tipo:</span>
         <button class="filtro-btn active" onclick="setFiltroMov('todos',this)">Todos</button>
@@ -1040,7 +1040,7 @@ async function carregarDados() {
     </div>
 
     <!-- TRANSFERÊNCIAS -->
-    <div class="section" id="sec-transferencias">
+    <div class="section" id="sec-transferencias" style="display:none">
       <div style="margin-bottom:24px">
         <h2 style="font-family:'Syne',sans-serif;font-size:18px;color:var(--text-main);margin-bottom:4px">Transferências entre Setores</h2>
         <p style="font-size:13px;color:var(--text-light)">Mova produtos de um setor para outro</p>
@@ -1059,7 +1059,7 @@ async function carregarDados() {
     </div>
 
     <!-- ALERTAS -->
-    <div class="section" id="sec-alertas">
+    <div class="section" id="sec-alertas" style="display:none">
       <div style="margin-bottom:24px">
         <h2 style="font-family:'Syne',sans-serif;font-size:18px;color:var(--text-main);margin-bottom:4px">Alertas de Estoque</h2>
         <p style="font-size:13px;color:var(--text-light)">Produtos abaixo do mínimo em qualquer setor</p>
@@ -1069,7 +1069,7 @@ async function carregarDados() {
     </div>
 
     <!-- RELATÓRIOS -->
-    <div class="section" id="sec-relatorios">
+    <div class="section" id="sec-relatorios" style="display:none">
       <div class="relatorio-grid">
         <div class="chart-card"><h3>📊 Produtos por Setor</h3><div class="bar-chart" id="chart-setor"></div></div>
         <div class="chart-card"><h3>📦 Produtos por Categoria</h3><div class="bar-chart" id="chart-cat"></div></div>
@@ -1155,7 +1155,7 @@ async function carregarDados() {
     </div>
 
     <!-- PRODUTOS (CADASTRO) -->
-    <div class="section" id="sec-produtos">
+    <div class="section" id="sec-produtos" style="display:none">
       <div class="filtro-bar">
         <button class="filtro-btn active" onclick="setFiltroProd('todos',this)">Todos</button>
         <button class="filtro-btn f-buffet" onclick="setFiltroProd('buffet',this)">🍨 Buffet</button>
@@ -1180,7 +1180,7 @@ async function carregarDados() {
     </div>
 
     <!-- DESPERDÍCIO -->
-    <div class="section" id="sec-desperdicio">
+    <div class="section" id="sec-desperdicio" style="display:none">
       <div style="margin-bottom:24px">
         <h2 style="font-family:'Syne',sans-serif;font-size:18px;color:var(--text-main);margin-bottom:4px">🗑️ Controle de Desperdício</h2>
         <p style="font-size:13px;color:var(--text-light)">Registre e acompanhe perdas por vencimento, queda, erro de preparo e outros motivos</p>
@@ -1267,7 +1267,7 @@ async function carregarDados() {
     </div>
 
     <!-- INVENTÁRIO -->
-    <div class="section" id="sec-inventario">
+    <div class="section" id="sec-inventario" style="display:none">
       <div style="margin-bottom:24px">
         <h2 style="font-family:'Syne',sans-serif;font-size:18px;color:var(--text-main);margin-bottom:4px">🔢 Inventário — Contagem Física</h2>
         <p style="font-size:13px;color:var(--text-light)">Compare o estoque real com o sistema e registre diferenças (quebra, furto, erro de contagem)</p>
@@ -1334,7 +1334,7 @@ async function carregarDados() {
     <!-- BACKUP & DADOS -->
 
     <!-- ====== CONTROLE DE VENDAS ====== -->
-    <div class="section" id="sec-vendas">
+    <div class="section" id="sec-vendas" style="display:none">
 
       <!-- Cabeçalho -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
@@ -1509,7 +1509,7 @@ async function carregarDados() {
 
 
 
-        <div class="section" id="sec-backup">
+    <div class="section" id="sec-backup" style="display:none">
       <div style="margin-bottom:24px">
         <h2 style="font-family:'Syne',sans-serif;font-size:18px;color:var(--text-main);margin-bottom:4px">💾 Backup &amp; Proteção de Dados</h2>
         <p style="font-size:13px;color:var(--text-light)">Exporte, importe e proteja todos os dados do sistema</p>
